@@ -31,47 +31,61 @@ model AdminUser {
 }
 
 model Artwork {
-  id          String        @id @default(cuid())
-  title       String
-  slug        String        @unique
-  description String?       @db.Text
-  status      ArtworkStatus @default(DRAFT)
-  imageUrl    String?       @db.VarChar(2048)
-  featured    Boolean       @default(false)
-  variants    PrintVariant[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  title            String
+  slug             String        @unique
+  description      String?       @db.Text
+  status           ArtworkStatus @default(DRAFT)
+  imageUrl         String?       @db.VarChar(2048)
+  featured         Boolean       @default(false)
+  printifyProductId String?      @unique
+  variants         PrintVariant[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status, featured])
 }
 
 model PrintVariant {
-  id            String      @id @default(cuid())
-  artworkId     String
-  artwork       Artwork     @relation(fields: [artworkId], references: [id], onDelete: Cascade)
-  name          String
-  sku           String?     @unique
-  widthInches   Decimal?    @db.Decimal(6, 2)
-  heightInches  Decimal?    @db.Decimal(6, 2)
-  priceCents    Int
-  inventoryQty  Int         @default(0)
-  active        Boolean     @default(true)
-  orderItems    OrderItem[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                String      @id @default(cuid())
+  artworkId         String
+  artwork           Artwork     @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  name              String
+  sku               String?     @unique
+  widthInches       Decimal?    @db.Decimal(6, 2)
+  heightInches      Decimal?    @db.Decimal(6, 2)
+  priceCents        Int
+  inventoryQty      Int         @default(0)
+  active            Boolean     @default(true)
+  printifyVariantId String?
+  orderItems        OrderItem[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([artworkId, active])
+  @@index([printifyVariantId])
 }
 
 model CustomerOrder {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
-  customerName    String
-  customerEmail   String
-  status          OrderStatus @default(PENDING)
-  subtotalCents   Int
-  shippingCents   Int         @default(0)
-  totalCents      Int
-  stripeSessionId String?     @unique
-  items           OrderItem[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique
+  customerName      String
+  customerEmail     String
+  shippingAddress   String?     @db.Text
+  shippingCity      String?
+  shippingRegion    String?
+  shippingPostalCode String?
+  shippingCountry   String?
+  status            OrderStatus @default(PENDING)
+  subtotalCents     Int
+  shippingCents     Int         @default(0)
+  totalCents        Int
+  stripeSessionId   String?     @unique
+  printifyOrderId   String?     @unique
+  printifyStatus    String?
+  items             OrderItem[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   @@index([customerEmail])
   @@index([status, createdAt])
