@@ -1,6 +1,7 @@
-import { BadRequestException, Body, Controller, Get, Headers, Post, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Headers, Post } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { PrismaService } from "./prisma.service";
+import { requireAdminToken } from "./admin-auth";
 
 @Controller("orders")
 export class OrdersController {
@@ -61,8 +62,8 @@ export class OrdersController {
   }
 
   @Get("admin")
-  async listAdmin(@Headers("x-admin-key") key: string) {
-    if (!process.env.ADMIN_API_KEY || key !== process.env.ADMIN_API_KEY) throw new UnauthorizedException("Admin API key is missing or invalid");
+  async listAdmin(@Headers("authorization") authorization: string) {
+    requireAdminToken(authorization)
     return this.prisma.customerOrder.findMany({
       include: { items: true },
       orderBy: { createdAt: "desc" },
