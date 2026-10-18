@@ -1,5 +1,6 @@
-import { BadRequestException, Body, Controller, Get, Headers, NotFoundException, Param, Post, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Headers, NotFoundException, Param, Post } from "@nestjs/common";
 import { PrismaService } from "./prisma.service";
+import { requireAdminToken } from "./admin-auth";
 
 @Controller()
 export class CatalogController {
@@ -25,8 +26,8 @@ export class CatalogController {
   }
 
   @Get("admin/artworks")
-  async listAdmin(@Headers("x-admin-key") key: string) {
-    this.requireAdmin(key);
+  async listAdmin(@Headers("authorization") authorization: string) {
+    requireAdminToken(authorization)
     return this.prisma.artwork.findMany({
       include: { variants: { orderBy: { priceCents: "asc" } } },
       orderBy: { updatedAt: "desc" },
@@ -34,8 +35,8 @@ export class CatalogController {
   }
 
   @Post("admin/artworks")
-  async create(@Headers("x-admin-key") key: string, @Body() body: any) {
-    this.requireAdmin(key);
+  async create(@Headers("authorization") authorization: string, @Body() body: any) {
+    requireAdminToken(authorization)
     const title = String(body.title ?? "").trim();
     const slug = String(body.slug ?? "").trim().toLowerCase();
     if (!title || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
@@ -66,14 +67,9 @@ export class CatalogController {
   }
 
   @Post("admin/artworks/:id/publish")
-  async publish(@Headers("x-admin-key") key: string, @Param("id") id: string, @Body() body: any) {
-    this.requireAdmin(key);
+  async publish(@Headers("authorization") authorization: string, @Param("id") id: string, @Body() body: any) {
+    requireAdminToken(authorization)
     return this.prisma.artwork.update({ where: { id }, data: { status: body.published === true ? "PUBLISHED" : "DRAFT" } });
   }
 
-  private requireAdmin(key?: string) {
-    if (!process.env.ADMIN_API_KEY || key !== process.env.ADMIN_API_KEY) {
-      throw new UnauthorizedException("Admin API key is missing or invalid");
-    }
-  }
 }
