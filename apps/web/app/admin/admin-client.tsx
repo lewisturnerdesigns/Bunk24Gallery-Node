@@ -68,6 +68,8 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
       if (!response.ok || typeof data.accessToken !== "string") throw new Error(data.message || "Email or password is incorrect.");
       window.sessionStorage.setItem("bunk24-admin-token", data.accessToken);
       setToken(data.accessToken);
+      setUnlocked(true);
+      setAuthReady(true);
       await load(data.accessToken);
     } catch (e) { setError(e instanceof Error ? e.message : "Unable to sign in."); }
     finally { setBusy(false); }
@@ -77,6 +79,7 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
     const saved = window.sessionStorage.getItem("bunk24-admin-token");
     if (saved) {
       setToken(saved);
+      setUnlocked(true);
       void load(saved);
     } else {
       setAuthReady(true);
