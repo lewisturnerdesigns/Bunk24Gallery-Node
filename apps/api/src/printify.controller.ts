@@ -69,7 +69,7 @@ export class PrintifyController {
     }
 
     const title = String(product.title || "Untitled Print").trim().slice(0, 160) || "Untitled Print";
-    const slugBase = title.toLowerCase().normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "")
+    const slugBase = title.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "print";
     const idSuffix = productId.toLowerCase().replace(/[^a-z0-9]/g, "").slice(-10) || "import";
     const image = Array.isArray(product.images)
