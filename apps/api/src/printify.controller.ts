@@ -1,5 +1,6 @@
-import { Controller, Get, Headers, UnauthorizedException } from "@nestjs/common";
+import { Controller, Get, Headers } from "@nestjs/common";
 import { PrintifyService } from "./printify.service";
+import { requireAdminToken } from "./admin-auth";
 
 @Controller("printify")
 export class PrintifyController {
@@ -11,20 +12,15 @@ export class PrintifyController {
   }
 
   @Get("shops")
-  async shops(@Headers("x-admin-key") key: string) {
-    this.requireAdmin(key);
+  async shops(@Headers("authorization") authorization: string) {
+    requireAdminToken(authorization)
     return this.printify.shops();
   }
 
   @Get("products")
   async products(@Headers("x-admin-key") key: string) {
-    this.requireAdmin(key);
+    requireAdminToken(authorization)
     return this.printify.products();
   }
 
-  private requireAdmin(key?: string) {
-    if (!process.env.ADMIN_API_KEY || key !== process.env.ADMIN_API_KEY) {
-      throw new UnauthorizedException("Admin API key is missing or invalid");
-    }
-  }
 }
