@@ -44,7 +44,8 @@ export default function AdminClient() {
 
   async function createArtwork(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(""); setMessage(""); setBusy(true);
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       await request("/admin/artworks", { method: "POST", body: JSON.stringify({
         title: form.get("title"), slug: form.get("slug"), description: form.get("description"),
@@ -52,7 +53,7 @@ export default function AdminClient() {
         priceCents: Math.round(Number(form.get("price")) * 100),
         published: form.get("published") === "on", featured: form.get("featured") === "on",
       }) });
-      setMessage("Artwork saved."); event.currentTarget.reset(); await load();
+      setMessage("Artwork saved."); formElement.reset(); await load();
     } catch (e) { setError(e instanceof Error ? e.message : "Could not save artwork."); }
     finally { setBusy(false); }
   }
