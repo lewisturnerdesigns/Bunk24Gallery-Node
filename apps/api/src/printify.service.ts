@@ -1,4 +1,6 @@
-import { Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
+
+type PrintifyProduct = { id?: string | number; [key: string]: any };
 
 @Injectable()
 export class PrintifyService {
@@ -6,14 +8,18 @@ export class PrintifyService {
   private get shopId() { return process.env.PRINTIFY_SHOP_ID?.trim(); }
 
   status() {
+    const configured = Boolean(this.token && this.shopId);
     return {
-      configured: Boolean(this.token && this.shopId),
+      configured,
       shopConfigured: Boolean(this.shopId),
       tokenConfigured: Boolean(this.token),
-      syncEnabled: Boolean(this.token && this.shopId),
-      note: this.token && this.shopId
-        ? "Credentials are present. Verify the connected shop before enabling live order submission."
-        : "Add PRINTIFY_API_TOKEN and PRINTIFY_SHOP_ID to the root .env file to connect Printify.",
+      catalogImportEnabled: configured,
+      // Deliberately hard-disabled. This integration does not submit orders to Printify.
+      syncEnabled: false,
+      orderSubmissionEnabled: false,
+      note: configured
+        ? "Read-only catalog access is configured. Imports create BUNK24 drafts only; Printify order submission is disabled."
+        : "Add PRINTIFY_API_TOKEN and PRINTIFY_SHOP_ID to the root .env file to enable read-only catalog access. Order submission remains disabled.",
     };
   }
 
@@ -35,5 +41,13 @@ export class PrintifyService {
     });
     if (!response.ok) throw new ServiceUnavailableException(`Printify products request failed with status ${response.status}`);
     return response.json();
+  }
+
+  async productById(productId: string): Promise<PrintifyProduct> {
+    const payload: any = await this.products();
+    const list: PrintifyProduct[] = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
+    const product = list.find((item) => String(item.id ?? "") === productId);
+    if (!product) throw new NotFoundException("Printify product was not found in the configured shop.");
+    return product;
   }
 }
