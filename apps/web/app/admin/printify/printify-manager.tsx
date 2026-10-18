@@ -11,7 +11,7 @@ type Artwork = {
   variants: { id: string; name: string; priceCents: number; printifyVariantId?: string | null; active: boolean }[];
 };
 type ProductVariant = {
-  id: string | number; title?: string; name?: string; price?: number; is_enabled?: boolean;
+  id: string | number; title?: string; name?: string; price?: number; cost?: number; is_enabled?: boolean;
   is_available?: boolean; sku?: string; grams?: number; options?: unknown[];
 };
 type ProductImage = { src?: string; is_default?: boolean; position?: number; variant_ids?: (string | number)[] };
@@ -235,7 +235,10 @@ export default function PrintifyManager({ token }: { token: string }) {
           const image = images.find((item) => item.src)?.src;
           const variants = product.variants || [];
           const enabled = variants.filter((variant) => variant.is_enabled !== false && variant.is_available !== false).length;
-          const costs = variants.map((variant) => Number(variant.price)).filter((price) => Number.isFinite(price) && price > 0);
+          const retailPrices = variants.map((variant) => Number(variant.price)).filter((price) => Number.isFinite(price) && price > 0);
+          const costs = variants.map((variant) => Number(variant.cost)).filter((cost) => Number.isFinite(cost) && cost > 0);
+          const minRetail = retailPrices.length ? Math.min(...retailPrices) : 0;
+          const maxRetail = retailPrices.length ? Math.max(...retailPrices) : 0;
           const minCost = costs.length ? Math.min(...costs) : 0;
           const maxCost = costs.length ? Math.max(...costs) : 0;
           const artistId = selectedArtists[artwork?.id || ""] ?? artwork?.artistId ?? artwork?.artist?.id ?? "";
@@ -250,17 +253,18 @@ export default function PrintifyManager({ token }: { token: string }) {
               <div className="printify-card-heading"><div><p className="eyebrow">PRINTIFY ID · {product.id}</p><h3>{product.title || "Untitled product"}</h3></div><span className="printify-variant-count">{variants.length} options</span></div>
               <p className="printify-card-description">{product.description?.trim() || "No product description supplied by Printify."}</p>
               <div className="printify-facts">
-                <div><span>Provider cost range</span><strong>{costs.length ? minCost === maxCost ? money(minCost) : `${money(minCost)} – ${money(maxCost)}` : "Not supplied"}</strong></div>
-                <div><span>Available options</span><strong>{enabled} of {variants.length}</strong></div>
+                <div><span>Printify retail range</span><strong>{retailPrices.length ? minRetail === maxRetail ? money(minRetail) : `${money(minRetail)} – ${money(maxRetail)}` : "Not supplied"}</strong></div>
+                <div><span>Fulfillment cost range</span><strong>{costs.length ? minCost === maxCost ? money(minCost) : `${money(minCost)} – ${money(maxCost)}` : "Not supplied"}</strong></div>
                 <div><span>BUNK24 retail range</span><strong>{artwork?.variants?.length ? `${money(Math.min(...artwork.variants.map((v) => v.priceCents)))} – ${money(Math.max(...artwork.variants.map((v) => v.priceCents)))}` : "Not imported yet"}</strong></div>
               </div>
 
               <details className="printify-variant-details"><summary>Review variants and prices <span>{variants.length}</span></summary>
-                {variants.length ? <div className="printify-variant-table-wrap"><table className="printify-variant-table"><thead><tr><th>Variant / size</th><th>Provider cost</th><th>Availability</th><th>Variant ID</th></tr></thead><tbody>{variants.map((variant) => {
-                  const providerPrice = Number(variant.price);
+                {variants.length ? <div className="printify-variant-table-wrap"><table className="printify-variant-table"><thead><tr><th>Variant / size</th><th>Printify retail</th><th>Fulfillment cost</th><th>Availability</th><th>Variant ID</th></tr></thead><tbody>{variants.map((variant) => {
+                  const retailPrice = Number(variant.price);
+                  const fulfillmentCost = Number(variant.cost);
                   const live = variant.is_enabled !== false && variant.is_available !== false;
                   const retail = artwork?.variants?.find((row) => String(row.printifyVariantId || "") === String(variant.id));
-                  return <tr key={String(variant.id)}><td><strong>{variant.title || variant.name || "Print option"}</strong>{variant.sku && <small>SKU {variant.sku}</small>}{retail && <small>BUNK24 retail: {money(retail.priceCents)}</small>}{typeof variant.grams === "number" && <small>{variant.grams} g</small>}</td><td>{Number.isFinite(providerPrice) && providerPrice > 0 ? money(providerPrice) : "—"}</td><td><span className={live ? "printify-availability available" : "printify-availability unavailable"}>{live ? "Available" : "Disabled / unavailable"}</span></td><td><code>{variant.id}</code></td></tr>;
+                  return <tr key={String(variant.id)}><td><strong>{variant.title || variant.name || "Print option"}</strong>{variant.sku && <small>SKU {variant.sku}</small>}{retail && <small>BUNK24 retail: {money(retail.priceCents)}</small>}{typeof variant.grams === "number" && <small>{variant.grams} g</small>}</td><td>{Number.isFinite(retailPrice) && retailPrice > 0 ? money(retailPrice) : "—"}</td><td>{Number.isFinite(fulfillmentCost) && fulfillmentCost > 0 ? money(fulfillmentCost) : "—"}</td><td><span className={live ? "printify-availability available" : "printify-availability unavailable"}>{live ? "Available" : "Disabled / unavailable"}</span></td><td><code>{variant.id}</code></td></tr>;
                 })}</tbody></table></div> : <p className="muted small-copy">No variants returned for this product.</p>}
               </details>
 
