@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import PrintifyManager from "./printify/printify-manager";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/$/, "");
@@ -225,33 +226,8 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
       </div>}
       {section === "artwork" && <div className="admin-content-grid"><form className="admin-form" onSubmit={createArtwork}><h2>Add artwork</h2><label className="field-label">Title<input name="title" required maxLength={160} /></label><label className="field-label">URL slug<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="my-artwork-title" /></label><label className="field-label">Description<textarea name="description" rows={4} /></label><label className="field-label">Artwork image URL<input name="imageUrl" type="url" placeholder="https://…" /></label><label className="field-label">Print option name<input name="variantName" defaultValue="18 × 24 in print" required /></label><label className="field-label">Retail price (USD)<input name="price" type="number" min="0.01" step="0.01" required /></label><label className="check-label"><input name="featured" type="checkbox" /> Feature on home page</label><label className="check-label"><input name="published" type="checkbox" /> Publish immediately</label><button className="button" disabled={busy}>Save artwork</button></form><div><h2>Catalogue</h2>{artworks.length ? artworks.map((artwork) => <article className="admin-list-item" key={artwork.id}><div><strong>{artwork.title}</strong><p className="muted small-copy">/{artwork.slug} · {artwork.status} · {artwork.variants.length} print option(s)</p></div><button className="button secondary" disabled={busy} onClick={() => void togglePublish(artwork)}>{artwork.status === "PUBLISHED" ? "Unpublish" : "Publish"}</button></article>) : <p className="muted">No artwork yet.</p>}</div></div>}
       {section === "orders" && <div>{orders.length ? orders.map((order) => <article className="admin-list-item" key={order.id}><div><strong>{order.orderNumber}</strong><p className="muted small-copy">{order.customerName} · {order.customerEmail}</p><p className="muted small-copy">{new Date(order.createdAt).toLocaleString()} · {order.status}</p></div><strong>{(order.totalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong></article>) : <p className="muted">No orders have been submitted.</p>}<p className="notice">Orders created before payment integration are unpaid records. They are not automatically sent to Printify.</p></div>}
-      {section === "printify" && <div className="printify-workspace">
-        <p>{printify?.note}</p>
-        <div className="printify-safety-note"><strong>SAFE MODE · READ ONLY</strong><span>Import copies catalog data into BUNK24 drafts. It never creates products or orders in Printify. Publishing still requires your separate approval.</span></div>
-        <button className="button" disabled={busy || !printify?.tokenConfigured} onClick={() => void loadPrintify()}>{busy ? "Loading…" : "Fetch shops & products"}</button>
-        {shops !== null && <details className="printify-shop-details"><summary>Connected shops · view response</summary><pre className="json-panel">{JSON.stringify(shops, null, 2)}</pre></details>}
-        {products !== null && <><div className="panel-heading printify-products-heading"><div><p className="muted small-copy">YOUR PROVIDER CATALOGUE</p><h2>Printify products</h2></div><span className="muted small-copy">{printifyProducts.length} product(s)</span></div>
-          {printifyProducts.length ? <div className="printify-product-grid">{printifyProducts.map((product) => {
-            const alreadyImported = artworks.some((artwork) => String(artwork.printifyProductId || "") === String(product.id));
-            const image = product.images?.find((item) => item.is_default && item.src)?.src || product.images?.find((item) => item.src)?.src;
-            const variants = product.variants || [];
-            const enabledVariants = variants.filter((variant) => variant.is_enabled !== false && variant.is_available !== false);
-            const costs = variants.map((variant) => Number(variant.price)).filter((price) => Number.isFinite(price) && price > 0);
-            const minCost = costs.length ? Math.min(...costs) : 0;
-            const maxCost = costs.length ? Math.max(...costs) : 0;
-            return <article className="printify-product-card" key={String(product.id)}>
-              {image ? <img className="printify-product-image" src={image} alt={product.title || "Printify product mockup"} loading="lazy" /> : <div className="printify-product-image printify-no-image">No mockup image</div>}
-              <div className="printify-product-card-body"><div className="printify-product-title-row"><h3>{product.title || "Untitled Printify product"}</h3><span className={alreadyImported ? "order-status-pill shipped" : "order-status-pill pending"}>{alreadyImported ? "Imported" : "Not imported"}</span></div>
-                <p className="muted small-copy">Provider ID: {product.id}</p>
-                <p className="printify-product-meta">{variants.length} variant(s) · {enabledVariants.length} enabled</p>
-                {costs.length > 0 && <p className="muted small-copy">Provider cost: {minCost === maxCost ? (minCost / 100).toLocaleString("en-US", { style: "currency", currency: "USD" }) : `${(minCost / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}–${(maxCost / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}`} · Retail prices are suggested for review</p>}
-                <button className="button secondary" disabled={busy || alreadyImported || !enabledVariants.length} onClick={() => void importPrintifyProduct(product.id)}>{alreadyImported ? "Already in BUNK24" : busy ? "Working…" : "Import as draft"}</button>
-              </div>
-            </article>;
-          })}</div> : <p className="muted">No products were returned, or the provider response used an unrecognized format.</p>}
-        </>}
-        <p className="muted small-copy">Nothing on this screen sends orders to Printify. Imported products remain unpublished drafts; verify image rights, variant availability, and retail pricing before publishing.</p>
-      </div>}
+      {section === "printify" && <PrintifyManager token={token} />}
+
     </section>
   </main>;
 }
