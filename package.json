@@ -1,0 +1,23 @@
+{
+  "name": "bunk24-gallery",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "concurrently -k -n WEB,API -c cyan,magenta \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:web": "npm run dev --workspace @bunk24/web",
+    "dev:api": "npm run start:dev --workspace @bunk24/api",
+    "build": "npm run build --workspace @bunk24/web && npm run build --workspace @bunk24/api",
+    "typecheck": "npm run typecheck --workspace @bunk24/shared && npm run typecheck --workspace @bunk24/api && npm run typecheck --workspace @bunk24/web",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prisma": "^6.19.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
