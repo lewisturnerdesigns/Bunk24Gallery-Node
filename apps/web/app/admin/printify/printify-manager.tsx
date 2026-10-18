@@ -17,7 +17,7 @@ type ProductVariant = {
 type ProductImage = { src?: string; is_default?: boolean; position?: number; variant_ids?: (string | number)[] };
 type PrintifyProduct = {
   id: string | number; title?: string; description?: string; images?: ProductImage[]; variants?: ProductVariant[];
-  tags?: string[]; blueprint_id?: number; print_provider_id?: number; visible?: boolean; is_locked?: boolean;
+  tags?: string[]; options?: { name?: string; type?: string; values?: { id?: string | number; title?: string }[] }[];\n  blueprint_id?: number; print_provider_id?: number; visible?: boolean; is_locked?: boolean;
   created_at?: string; updated_at?: string; external?: unknown; [key: string]: unknown;
 };
 type Status = { configured?: boolean; tokenConfigured?: boolean; shopConfigured?: boolean; catalogImportEnabled?: boolean; orderSubmissionEnabled?: boolean; note?: string };
@@ -267,13 +267,13 @@ export default function PrintifyManager({ token }: { token: string }) {
                 <dl className="printify-metadata">
                   <div><dt>Blueprint ID</dt><dd>{product.blueprint_id ?? "Not supplied"}</dd></div>
                   <div><dt>Print provider ID</dt><dd>{product.print_provider_id ?? "Not supplied"}</dd></div>
-                  <div><dt>Tags</dt><dd>{product.tags?.length ? product.tags.join(", ") : "No tags"}</dd></div>
+                  <div><dt>Tags</dt><dd>{product.tags?.length ? product.tags.join(", ") : "No tags"}</dd></div>\n                  <div><dt>Product options</dt><dd>{product.options?.length ? product.options.map((option) => `${option.name || option.type || "Option"}: ${option.values?.map((value) => value.title || value.id || "Value").join(", ") || "Values not supplied"}`).join(" · ") : "Not supplied"}</dd></div>\n                  <div><dt>External listing data</dt><dd>{product.external && typeof product.external === "object" ? JSON.stringify(product.external) : product.external ? String(product.external) : "Not linked"}</dd></div>
                   <div><dt>Visible in Printify</dt><dd>{typeof product.visible === "boolean" ? product.visible ? "Yes" : "No" : "Not supplied"}</dd></div>
                   <div><dt>Locked</dt><dd>{typeof product.is_locked === "boolean" ? product.is_locked ? "Yes" : "No" : "Not supplied"}</dd></div>
                   <div><dt>Created</dt><dd>{dateLabel(product.created_at)}</dd></div>
                   <div><dt>Last updated</dt><dd>{dateLabel(product.updated_at)}</dd></div>
                 </dl>
-                {images.length > 0 && <div className="printify-mockup-strip">{images.slice(0, 6).map((item, index) => item.src ? <a href={item.src} target="_blank" rel="noreferrer" key={item.src + index} title={item.is_default ? "Default mockup · open full image" : "Open full mockup"}><img src={item.src} alt={`Mockup ${index + 1} for ${product.title || "product"}`} loading="lazy" /><span>{item.is_default ? "DEFAULT" : `VIEW ${index + 1}`}</span></a> : null)}</div>}
+                {images.length > 0 && <div className="printify-mockup-strip">{images.map((item, index) => item.src ? <a href={item.src} target="_blank" rel="noreferrer" key={item.src + index} title={item.is_default ? "Default mockup · open full image" : "Open full mockup"}><img src={item.src} alt={`Mockup ${index + 1} for ${product.title || "product"}`} loading="lazy" /><span>{item.is_default ? "DEFAULT" : `VIEW ${index + 1}`}</span></a> : null)}</div>}
                 <details className="printify-raw-details"><summary>Show complete provider response</summary><pre className="json-panel">{JSON.stringify(product, null, 2)}</pre></details>
               </details>
 
