@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Headers, NotFoundException, Param, Post, Query, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Headers, NotFoundException, Param, Post, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "./prisma.service";
 
 @Controller()
@@ -6,12 +6,9 @@ export class CatalogController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get("artworks")
-  async list(@Query("all") all?: string) {
-    const where = all === "true"
-      ? {}
-      : { status: "PUBLISHED" as const };
+  async list() {
     return this.prisma.artwork.findMany({
-      where,
+      where: { status: "PUBLISHED" },
       include: { variants: { where: { active: true }, orderBy: { priceCents: "asc" } } },
       orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     });
@@ -27,6 +24,15 @@ export class CatalogController {
     return artwork;
   }
 
+  @Get("admin/artworks")
+  async listAdmin(@Headers("x-admin-key") key: string) {
+    this.requireAdmin(key);
+    return this.prisma.artwork.findMany({
+      include: { variants: { orderBy: { priceCents: "asc" } } },
+      orderBy: { updatedAt: "desc" },
+    });
+  }
+
   @Post("admin/artworks")
   async create(@Headers("x-admin-key") key: string, @Body() body: any) {
     this.requireAdmin(key);
@@ -37,7 +43,7 @@ export class CatalogController {
     }
     const priceCents = Number(body.priceCents);
     if (!Number.isInteger(priceCents) || priceCents < 1) {
-      throw new BadRequestException("priceCents must be a positive integer");
+      throw new BadRequestException("priceCents must be a positive integer in cents");
     }
     return this.prisma.artwork.create({
       data: {
@@ -62,8 +68,7 @@ export class CatalogController {
   @Post("admin/artworks/:id/publish")
   async publish(@Headers("x-admin-key") key: string, @Param("id") id: string, @Body() body: any) {
     this.requireAdmin(key);
-    const status = body.published === true ? "PUBLISHED" : "DRAFT";
-    return this.prisma.artwork.update({ where: { id }, data: { status } });
+    return this.prisma.artwork.update({ where: { id }, data: { status: body.published === true ? "PUBLISHED" : "DRAFT" } });
   }
 
   private requireAdmin(key?: string) {
