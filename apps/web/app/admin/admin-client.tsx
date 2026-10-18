@@ -8,10 +8,12 @@ type Artwork = { id: string; title: string; slug: string; status: string; imageU
 type Order = { id: string; orderNumber: string; customerName: string; customerEmail: string; status: string; totalCents: number; createdAt: string };
 type PrintifyStatus = { configured: boolean; note: string };
 
-export default function AdminClient() {
+type Section = "overview" | "artwork" | "orders" | "printify";
+
+export default function AdminClient({ initialSection = "overview" }: { initialSection?: Section }) {
   const [key, setKey] = useState("");
   const [unlocked, setUnlocked] = useState(false);
-  const [section, setSection] = useState<"overview" | "artwork" | "orders" | "printify">("overview");
+  const [section] = useState<Section>(initialSection);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [printify, setPrintify] = useState<PrintifyStatus | null>(null);
@@ -86,7 +88,7 @@ export default function AdminClient() {
 
   return <main className="admin-layout">
     <aside className="admin-side"><a className="wordmark" href="/">BUNK<span>24</span></a><p className="muted small-copy">GALLERY ADMIN</p><nav aria-label="Admin navigation">
-      {(["overview", "artwork", "orders", "printify"] as const).map((item) => <button key={item} className={section === item ? "admin-nav active" : "admin-nav"} onClick={() => setSection(item)}>{item === "artwork" ? "Artwork & prints" : item[0].toUpperCase() + item.slice(1)}</button>)}
+      {([{ key: "overview", label: "Overview", href: "/admin" }, { key: "artwork", label: "Artwork & prints", href: "/admin/artwork" }, { key: "orders", label: "Orders", href: "/admin/orders" }, { key: "printify", label: "Printify", href: "/admin/printify" }] as const).map((item) => <a key={item.key} className={section === item.key ? "admin-nav active" : "admin-nav"} href={item.href}>{item.label}</a>)}
       <button className="admin-nav" onClick={() => { setUnlocked(false); setKey(""); }}>Lock workspace</button>
     </nav></aside>
     <section className="admin-main"><div className="eyebrow">Workspace / {section}</div><h1>{section === "overview" ? "Good to see you." : section === "artwork" ? "Artwork & prints" : section === "orders" ? "Orders" : "Printify connection"}</h1>
