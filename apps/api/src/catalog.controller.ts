@@ -30,7 +30,7 @@ export class CatalogController {
     @Query("limit") limitValue?: string,
   ) {
     const where: any = { status: "PUBLISHED" };
-    if (artist?.trim()) where.artist = { slug: artist.trim() };
+    if (artist?.trim()) where.artist = { is: { slug: artist.trim() } };
     if (featured === "true") where.featured = true;
     if (featured === "false") where.featured = false;
     if (search?.trim()) {
@@ -131,7 +131,8 @@ export class CatalogController {
     }
     if (typeof body.featured === "boolean") data.featured = body.featured;
     if (typeof body.published === "boolean") {
-      if (body.published && existing.printifyProductId && !(data.artistId ?? existing.artistId)) {
+      const nextArtistId = body.artistId !== undefined ? (data.artistId ?? null) : existing.artistId;
+      if (body.published && existing.printifyProductId && !nextArtistId) {
         throw new BadRequestException("Assign this Printify item to an artist before publishing.");
       }
       data.status = body.published ? "PUBLISHED" : "DRAFT";
