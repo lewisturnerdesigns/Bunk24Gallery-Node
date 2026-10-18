@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ArtworkStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FULFILLING
+  SHIPPED
+  CANCELLED
+  REFUNDED
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Artwork {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description Text?
+  status      ArtworkStatus @default(DRAFT)
+  imageUrl    String?       @db.VarChar(2048)
+  featured    Boolean       @default(false)
+  variants    PrintVariant[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model PrintVariant {
+  id            String      @id @default(cuid())
+  artworkId     String
+  artwork       Artwork     @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  name          String
+  sku           String?     @unique
+  widthInches   Decimal?    @db.Decimal(6, 2)
+  heightInches  Decimal?    @db.Decimal(6, 2)
+  priceCents    Int
+  inventoryQty  Int         @default(0)
+  active        Boolean     @default(true)
+  orderItems    OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model CustomerOrder {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerName    String
+  customerEmail   String
+  status          OrderStatus @default(PENDING)
+  subtotalCents   Int
+  shippingCents   Int         @default(0)
+  totalCents      Int
+  stripeSessionId String?     @unique
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([customerEmail])
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id              String        @id @default(cuid())
+  orderId         String
+  order           CustomerOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId       String
+  variant         PrintVariant  @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  variantName     String
+  quantity        Int
+  unitPriceCents  Int
+}
