@@ -273,3 +273,57 @@
 .admin-login-form .button{width:100%;justify-content:space-between;margin-top:4px;border:0;cursor:pointer}
 .admin-login-form .button:disabled{opacity:.65;cursor:wait}
 .admin-login-normal>.small-copy{margin-top:25px;font:9px var(--mono);letter-spacing:.04em}
+
+
+/* BUNK24 admin workspace: hover-expand studio rail and analytics */
+.admin-layout{display:flex;min-height:100vh;background:var(--paper);align-items:stretch}
+.admin-side{position:sticky;top:0;align-self:flex-start;flex:0 0 76px;width:76px;height:100vh;min-height:520px;overflow:hidden;padding:27px 12px 22px;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;z-index:20;transition:width .24s ease,flex-basis .24s ease,padding .24s ease}
+.admin-side:hover,.admin-side.expanded{width:246px;flex-basis:246px;padding-left:20px;padding-right:20px}
+.admin-side .wordmark{display:flex;align-items:center;height:38px;white-space:nowrap;font-size:23px;letter-spacing:-.09em}
+.side-brand-full{display:none}.side-brand-short{display:inline}.side-brand-short span{color:var(--orange)}
+.admin-side:hover .side-brand-full,.admin-side.expanded .side-brand-full{display:inline}.admin-side:hover .side-brand-short,.admin-side.expanded .side-brand-short{display:none}
+.admin-side .side-caption{font:9px var(--mono);letter-spacing:.12em;color:#a7a39b;margin:34px 0 13px 12px;white-space:nowrap}
+.admin-side nav{display:grid;gap:5px}
+.admin-side .admin-nav{display:flex;align-items:center;gap:13px;width:100%;min-height:43px;padding:11px 12px;border:0;background:transparent;color:#c6c2b9;text-align:left;font:11px var(--sans);white-space:nowrap;cursor:pointer;transition:background .18s,color .18s}
+.admin-side .admin-nav:hover,.admin-side .admin-nav.active{background:#373631;color:#fff}
+.admin-side .admin-nav.active{box-shadow:inset 2px 0 var(--orange)}
+.admin-nav-icon{flex:0 0 18px;width:18px;text-align:center;font-size:17px;color:var(--orange)}
+.admin-nav-label{opacity:0;visibility:hidden;transition:opacity .12s;transition-delay:0s}
+.admin-side:hover .admin-nav-label,.admin-side.expanded .admin-nav-label{opacity:1;visibility:visible;transition-delay:.08s}
+.admin-side nav .admin-nav:last-child{margin-top:25px;border-top:1px solid #42413b;padding-top:16px}
+.admin-main{min-width:0;flex:1;padding:43px clamp(22px,4vw,58px) 70px}
+.admin-main>.eyebrow{margin:0 0 13px;text-transform:uppercase}
+.admin-main>h1{font-size:clamp(36px,4vw,52px);font-weight:500;letter-spacing:-.065em;margin:0 0 27px}
+.admin-welcome-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin:0 0 26px}
+.admin-welcome-row .small-copy,.panel-heading .small-copy{margin:0 0 9px;font:9px var(--mono);letter-spacing:.1em}
+.admin-welcome-row h2{font-size:34px;letter-spacing:-.055em;font-weight:500;margin:0 0 7px}
+.admin-welcome-row p:not(.small-copy){font-size:12px;margin:0}
+.admin-welcome-row>.button{flex-shrink:0}
+.analytics-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.analytics-stats .stat{min-width:0;padding:20px;background:#faf8f2;border:1px solid var(--line)}
+.analytics-stats .stat>span{font:9px var(--mono);letter-spacing:.08em}
+.analytics-stats .stat>strong{display:block;font-size:clamp(20px,2.3vw,30px);font-weight:500;letter-spacing:-.045em;margin-top:16px;overflow-wrap:anywhere}
+.analytics-stats .stat .small-copy{font-size:10px;line-height:1.6;margin:9px 0 0}
+.status-ready{color:#3c7956}
+.admin-dashboard-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(230px,.8fr);gap:16px;margin-bottom:16px}
+.admin-panel{min-width:0;padding:22px;background:#faf8f2;border:1px solid var(--line)}
+.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:23px}
+.panel-heading h2{font-size:20px;font-weight:500;letter-spacing:-.035em;margin:0}
+.panel-heading>a{font-size:10px;white-space:nowrap;border-bottom:1px solid var(--line);padding-bottom:4px}
+.chart-legend{font:10px var(--mono);color:var(--muted);display:flex;align-items:center;gap:7px}.chart-legend i{width:7px;height:7px;background:var(--orange);border-radius:50%}
+.sales-chart{height:190px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;border-bottom:1px solid var(--line);padding:0 0 8px;margin-bottom:14px}
+.sales-day{min-width:0;display:flex;flex-direction:column;align-items:center;gap:10px;font:9px var(--mono);color:var(--muted)}
+.sales-bar-track{width:100%;height:160px;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(to top,transparent calc(25% - 1px),#e9e5dc 25%,transparent calc(25% + 1px),transparent calc(50% - 1px),#e9e5dc 50%,transparent calc(50% + 1px),transparent calc(75% - 1px),#e9e5dc 75%,transparent calc(75% + 1px))}
+.sales-bar{width:min(26px,65%);min-height:2px;background:var(--orange);transition:height .25s}
+.analytics-chart>.small-copy{font-size:10px;line-height:1.7;margin:0}
+.status-panel .panel-heading{margin-bottom:14px}
+.status-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #e9e5dc;font-size:11px}
+.status-row:last-child{border-bottom:0}.status-row>span{display:flex;align-items:center;gap:9px}
+.status-row strong{font:12px var(--mono)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#aaa69d}.status-dot.paid,.status-dot.shipped{background:#50815d}.status-dot.fulfillment{background:#c98b35}.status-dot.pending{background:var(--orange)}.status-dot.cancelled,.status-dot.refunded{background:#9b7771}
+.recent-orders .panel-heading{margin-bottom:10px}
+.recent-order{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:18px;padding:15px 0;border-bottom:1px solid #e9e5dc}
+.recent-order:last-child{border-bottom:0}.recent-order strong{font-size:11px}.recent-order .small-copy{font-size:10px;margin:6px 0 0}
+.order-status-pill{padding:6px 8px;background:#e9e5dc;font:8px var(--mono);white-space:nowrap}.order-status-pill.paid,.order-status-pill.shipped{background:#e0eade;color:#42694b}.order-status-pill.pending{background:#f8e5dd;color:#9b4d33}
+@media(max-width:1100px){.analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-dashboard-grid{grid-template-columns:1fr}.admin-main{padding-left:28px;padding-right:28px}}
+@media(max-width:680px){.admin-side{flex-basis:58px;width:58px;padding:20px 7px}.admin-side:hover,.admin-side.expanded{width:220px;flex-basis:220px;padding-left:13px;padding-right:13px}.admin-main{padding:30px 15px 45px}.admin-main>h1{font-size:34px}.admin-welcome-row{align-items:flex-start;flex-direction:column}.analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.analytics-stats .stat{padding:14px}.analytics-stats .stat>strong{font-size:22px}.admin-panel{padding:16px}.sales-chart{gap:7px;height:170px}.sales-bar-track{height:140px}.recent-order{grid-template-columns:minmax(0,1fr) auto;gap:10px}.recent-order>strong{grid-column:2;grid-row:1}.recent-order .order-status-pill{grid-column:1;grid-row:2;justify-self:start}.admin-side .side-caption{margin-left:8px}}
