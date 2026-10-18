@@ -357,3 +357,25 @@
   .admin-welcome-row{padding-bottom:18px}
   .analytics-stats .stat>strong{font-size:clamp(18px,5vw,23px)}
 }
+
+
+/* Printify catalog review: provider data is imported into drafts only */
+.printify-workspace{max-width:1120px}
+.printify-safety-note{display:flex;flex-direction:column;gap:7px;padding:16px 18px;margin:20px 0;background:#faf8f2;border:1px solid var(--line);border-left:3px solid var(--orange);font-size:12px;line-height:1.6}
+.printify-safety-note strong{font:9px var(--mono);letter-spacing:.1em;color:#9b4d33}
+.printify-safety-note span{color:var(--muted)}
+.printify-shop-details{margin:18px 0;font-size:11px;color:var(--muted)}
+.printify-shop-details summary{cursor:pointer;padding:9px 0}
+.printify-products-heading{margin:32px 0 17px}
+.printify-product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.printify-product-card{min-width:0;overflow:hidden;background:#faf8f2;border:1px solid var(--line);box-shadow:0 5px 18px rgba(32,32,29,.025)}
+.printify-product-image{display:block;width:100%;height:230px;object-fit:contain;background:#eeebe3}
+.printify-no-image{display:grid;place-items:center;color:var(--muted);font-size:11px}
+.printify-product-card-body{padding:17px}
+.printify-product-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.printify-product-title-row h3{font-size:17px;line-height:1.35;font-weight:500;letter-spacing:-.025em;margin:0;overflow-wrap:anywhere}
+.printify-product-title-row .order-status-pill{flex-shrink:0}
+.printify-product-card .small-copy{font-size:10px;line-height:1.6;overflow-wrap:anywhere}
+.printify-product-meta{font-size:11px;margin:12px 0 6px}
+.printify-product-card .button{margin-top:9px;min-height:40px}
+@media(max-width:760px){.printify-product-grid{grid-template-columns:1fr}.printify-product-image{height:200px}.printify-product-card-body{padding:14px}}
