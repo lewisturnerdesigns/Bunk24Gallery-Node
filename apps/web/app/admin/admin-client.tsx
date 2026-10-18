@@ -6,7 +6,7 @@ const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").rep
 type Variant = { id: string; name: string; priceCents: number };
 type Artwork = { id: string; title: string; slug: string; status: string; imageUrl?: string | null; variants: Variant[] };
 type Order = { id: string; orderNumber: string; customerName: string; customerEmail: string; status: string; totalCents: number; createdAt: string };
-type PrintifyStatus = { configured: boolean; note: string };
+type PrintifyStatus = { configured: boolean; tokenConfigured?: boolean; shopConfigured?: boolean; note: string };
 
 type Section = "overview" | "artwork" | "orders" | "printify";
 
@@ -95,8 +95,14 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
   async function loadPrintify() {
     setError(""); setMessage(""); setBusy(true);
     try {
-      const [s, p] = await Promise.all([request("/printify/shops"), request("/printify/products")]);
-      setShops(s); setProducts(p); setMessage("Printify data loaded from the connected account.");
+      const s = await request("/printify/shops");
+      setShops(s);
+      if (!printify?.shopConfigured) {
+        setMessage("Your Printify shops loaded. Add the correct shop ID to the root .env file, restart the API, then fetch again to load products.");
+        return;
+      }
+      const p = await request("/printify/products");
+      setProducts(p); setMessage("Printify shops and products loaded.");
     } catch (e) { setError(e instanceof Error ? e.message : "Could not load Printify."); }
     finally { setBusy(false); }
   }
@@ -141,7 +147,7 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
           <article className="stat"><span className="muted">PAID SALES</span><strong>{(analytics.revenueCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong><p className="muted small-copy">Paid, fulfilling and shipped orders</p></article>
           <article className="stat"><span className="muted">ORDERS</span><strong>{orders.length}</strong><p className="muted small-copy">{analytics.pending} awaiting payment/status update</p></article>
           <article className="stat"><span className="muted">PUBLISHED WORKS</span><strong>{analytics.published}</strong><p className="muted small-copy">{analytics.drafts} draft works in catalogue</p></article>
-          <article className="stat"><span className="muted">PRINTIFY</span><strong className={printify?.configured ? "status-ready" : ""}>{printify?.configured ? "Connected" : "Not connected"}</strong><p className="muted small-copy">{printify?.configured ? "API credentials detected" : "Connect your shop to continue"}</p></article>
+          <article className="stat"><span className="muted">PRINTIFY</span><strong className={printify?.configured ? "status-ready" : ""}>{printify?.configured ? "Connected" : printify?.tokenConfigured ? "Token set" : "Not connected"}</strong><p className="muted small-copy">{printify?.configured ? "API credentials detected" : printify?.tokenConfigured ? "Fetch shops to find your shop ID" : "Add a Printify API token"}</p></article>
         </div>
         <div className="admin-dashboard-grid">
           <article className="admin-panel analytics-chart"><div className="panel-heading"><div><p className="muted small-copy">LAST 7 DAYS</p><h2>Paid sales activity</h2></div><span className="chart-legend"><i /> Sales</span></div>
@@ -158,7 +164,7 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
       </div>}
       {section === "artwork" && <div className="admin-content-grid"><form className="admin-form" onSubmit={createArtwork}><h2>Add artwork</h2><label className="field-label">Title<input name="title" required maxLength={160} /></label><label className="field-label">URL slug<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="my-artwork-title" /></label><label className="field-label">Description<textarea name="description" rows={4} /></label><label className="field-label">Artwork image URL<input name="imageUrl" type="url" placeholder="https://…" /></label><label className="field-label">Print option name<input name="variantName" defaultValue="18 × 24 in print" required /></label><label className="field-label">Retail price (USD)<input name="price" type="number" min="0.01" step="0.01" required /></label><label className="check-label"><input name="featured" type="checkbox" /> Feature on home page</label><label className="check-label"><input name="published" type="checkbox" /> Publish immediately</label><button className="button" disabled={busy}>Save artwork</button></form><div><h2>Catalogue</h2>{artworks.length ? artworks.map((artwork) => <article className="admin-list-item" key={artwork.id}><div><strong>{artwork.title}</strong><p className="muted small-copy">/{artwork.slug} · {artwork.status} · {artwork.variants.length} print option(s)</p></div><button className="button secondary" disabled={busy} onClick={() => void togglePublish(artwork)}>{artwork.status === "PUBLISHED" ? "Unpublish" : "Publish"}</button></article>) : <p className="muted">No artwork yet.</p>}</div></div>}
       {section === "orders" && <div>{orders.length ? orders.map((order) => <article className="admin-list-item" key={order.id}><div><strong>{order.orderNumber}</strong><p className="muted small-copy">{order.customerName} · {order.customerEmail}</p><p className="muted small-copy">{new Date(order.createdAt).toLocaleString()} · {order.status}</p></div><strong>{(order.totalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong></article>) : <p className="muted">No orders have been submitted.</p>}<p className="notice">Orders created before payment integration are unpaid records. They are not automatically sent to Printify.</p></div>}
-      {section === "printify" && <div><p>{printify?.note}</p><button className="button" disabled={busy || !printify?.configured} onClick={() => void loadPrintify()}>{busy ? "Loading…" : "Fetch shops & products"}</button>{shops !== null && <><h2>Connected shops</h2><pre className="json-panel">{JSON.stringify(shops, null, 2)}</pre></>}{products !== null && <><h2>Printify products</h2><pre className="json-panel">{JSON.stringify(products, null, 2)}</pre></>}<p className="muted small-copy">This reads your connected Printify account. Product creation, publishing, and paid-order submission are not enabled in this stage.</p></div>}
+      {section === "printify" && <div><p>{printify?.note}</p><button className="button" disabled={busy || !printify?.tokenConfigured} onClick={() => void loadPrintify()}>{busy ? "Loading…" : "Fetch shops & products"}</button>{shops !== null && <><h2>Connected shops</h2><pre className="json-panel">{JSON.stringify(shops, null, 2)}</pre></>}{products !== null && <><h2>Printify products</h2><pre className="json-panel">{JSON.stringify(products, null, 2)}</pre></>}<p className="muted small-copy">This reads your connected Printify account. Product creation, publishing, and paid-order submission are not enabled in this stage.</p></div>}
     </section>
   </main>;
 }
