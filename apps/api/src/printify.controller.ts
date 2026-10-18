@@ -53,12 +53,11 @@ export class PrintifyController {
     const variants = providerVariants
       .filter((variant) => variant?.id != null && Number.isInteger(Number(variant.price)) && Number(variant.price) > 0)
       .map((variant) => {
-        const providerCostCents = Number(variant.price);
-        // Conservative starting suggestion only; an admin must review retail prices before publishing.
-        const suggestedRetailCents = Math.max(1000, Math.ceil((providerCostCents * 2) / 100) * 100);
+        // Printify `price` is the configured retail price; `cost` is its fulfillment cost.
+        const retailPriceCents = Number(variant.price);
         return {
           name: String(variant.title || variant.name || "Print option").slice(0, 191),
-          priceCents: suggestedRetailCents,
+          priceCents: retailPriceCents,
           active: variant.is_enabled !== false && variant.is_available !== false,
           printifyVariantId: String(variant.id),
         };
@@ -94,7 +93,7 @@ export class PrintifyController {
       imported: true,
       alreadyImported: false,
       artwork,
-      message: "Imported as a draft. Review mockups, variant availability, and suggested retail prices before publishing.",
+      message: "Imported as a draft. Review mockups, variant availability, and retail prices before publishing.",
     };
   }
 }
