@@ -39,6 +39,8 @@ model Artwork {
   imageUrl         String?       @db.VarChar(2048)
   featured         Boolean       @default(false)
   printifyProductId String?      @unique
+  artistId          String?
+  artist            Artist?       @relation(fields: [artistId], references: [id], onDelete: SetNull)
   variants         PrintVariant[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
