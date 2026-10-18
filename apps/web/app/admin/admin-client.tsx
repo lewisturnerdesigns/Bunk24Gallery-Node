@@ -11,7 +11,9 @@ type PrintifyStatus = { configured: boolean; note: string };
 type Section = "overview" | "artwork" | "orders" | "printify";
 
 export default function AdminClient({ initialSection = "overview" }: { initialSection?: Section }) {
-  const [key, setKey] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [token, setToken] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [section] = useState<Section>(initialSection);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -23,24 +25,36 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function request(path: string, init: RequestInit = {}) {
+  async function request(path: string, init: RequestInit = {}, authToken = token) {
     const response = await fetch(`${API}${path}`, {
       ...init,
-      headers: { "Content-Type": "application/json", "x-admin-key": key, ...(init.headers || {}) },
+      headers: { "Content-Type": "application/json", ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}), ...(init.headers || {}) },
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(Array.isArray(data.message) ? data.message.join(", ") : data.message || `Request failed (${response.status})`);
     return data;
   }
 
-  async function load() {
+  async function load(authToken = token) {
     setBusy(true); setError(""); setMessage("");
     try {
       const [a, o, p] = await Promise.all([
-        request("/admin/artworks"), request("/orders/admin"), fetch(`${API}/printify/status`, { cache: "no-store" }).then((r) => r.json()),
+        request("/admin/artworks", {}, authToken), request("/orders/admin", {}, authToken), fetch(`${API}/printify/status`, { cache: "no-store" }).then((r) => r.json()),
       ]);
       setArtworks(a); setOrders(o); setPrintify(p); setUnlocked(true);
     } catch (e) { setError(e instanceof Error ? e.message : "Unable to connect."); setUnlocked(false); }
+    finally { setBusy(false); }
+  }
+
+  async function login(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setError(""); setBusy(true);
+    try {
+      const response = await fetch(`${API}/auth/admin/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || typeof data.accessToken !== "string") throw new Error(data.message || "Email or password is incorrect.");
+      setToken(data.accessToken);
+      await load(data.accessToken);
+    } catch (e) { setError(e instanceof Error ? e.message : "Unable to sign in."); }
     finally { setBusy(false); }
   }
 
@@ -78,18 +92,24 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
     finally { setBusy(false); }
   }
 
-  if (!unlocked) return <main className="admin-login">
-    <a className="wordmark" href="/">BUNK<span>24</span></a><div className="eyebrow">Private workspace</div><h1>Gallery admin.</h1>
-    <p className="muted">Enter the local ADMIN_API_KEY from your root .env file. It is kept in this page's memory only.</p>
-    <form onSubmit={(event) => { event.preventDefault(); void load(); }}><label className="field-label">Admin API key<input type="password" value={key} onChange={(event) => setKey(event.target.value)} required autoComplete="current-password" /></label><button className="button" disabled={busy || !key}>{busy ? "Connecting…" : "Unlock workspace"}</button></form>
+  if (!unlocked) return <main className="admin-login admin-login-normal">
+    <a className="wordmark" href="/">BUNK<span>24</span></a>
+    <div className="eyebrow">STUDIO CONTROL</div>
+    <h1>Welcome back.</h1>
+    <p className="muted">Sign in to manage your artwork, print editions, and orders.</p>
+    <form onSubmit={(event) => void login(event)} className="admin-login-form">
+      <label className="field-label">Email address<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="username" placeholder="you@example.com" /></label>
+      <label className="field-label">Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" /></label>
+      <button className="button" disabled={busy || !email || !password}>{busy ? "Signing in…" : "Sign in"} <span aria-hidden="true">→</span></button>
+    </form>
     {error && <p className="error-text" role="alert">{error}</p>}
-    <p className="muted small-copy">This is a development admin gate, not production-grade user authentication.</p>
+    <p className="muted small-copy">BUNK24 Studio · Private workspace</p>
   </main>;
 
   return <main className="admin-layout">
     <aside className="admin-side"><a className="wordmark" href="/">BUNK<span>24</span></a><p className="muted small-copy">GALLERY ADMIN</p><nav aria-label="Admin navigation">
       {([{ key: "overview", label: "Overview", href: "/admin" }, { key: "artwork", label: "Artwork & prints", href: "/admin/artwork" }, { key: "orders", label: "Orders", href: "/admin/orders" }, { key: "printify", label: "Printify", href: "/admin/printify" }] as const).map((item) => <a key={item.key} className={section === item.key ? "admin-nav active" : "admin-nav"} href={item.href}>{item.label}</a>)}
-      <button className="admin-nav" onClick={() => { setUnlocked(false); setKey(""); }}>Lock workspace</button>
+      <button className="admin-nav" onClick={() => { setUnlocked(false); setToken(""); setPassword(""); }}>Lock workspace</button>
     </nav></aside>
     <section className="admin-main"><div className="eyebrow">Workspace / {section}</div><h1>{section === "overview" ? "Good to see you." : section === "artwork" ? "Artwork & prints" : section === "orders" ? "Orders" : "Printify connection"}</h1>
       {error && <p className="error-text" role="alert">{error}</p>}{message && <p className="notice" role="status">{message}</p>}
