@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/$/, "");
 type Variant = { id: string; name: string; priceCents: number };
@@ -16,6 +16,7 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
   const [token, setToken] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [section] = useState<Section>(initialSection);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [printify, setPrintify] = useState<PrintifyStatus | null>(null);
@@ -52,11 +53,19 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
       const response = await fetch(`${API}/auth/admin/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || typeof data.accessToken !== "string") throw new Error(data.message || "Email or password is incorrect.");
+      window.sessionStorage.setItem("bunk24-admin-token", data.accessToken);
       setToken(data.accessToken);
       await load(data.accessToken);
     } catch (e) { setError(e instanceof Error ? e.message : "Unable to sign in."); }
     finally { setBusy(false); }
   }
+
+  useEffect(() => {
+    const saved = window.sessionStorage.getItem("bunk24-admin-token");
+    if (saved) { setToken(saved); void load(saved); }
+    // Restore the short-lived admin session when moving between admin pages.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function createArtwork(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(""); setMessage(""); setBusy(true);
@@ -92,6 +101,19 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
     finally { setBusy(false); }
   }
 
+  const analytics = useMemo(() => {
+    const paidOrders = orders.filter((order) => order.status === "PAID" || order.status === "FULFILLING" || order.status === "SHIPPED");
+    const revenueCents = paidOrders.reduce((sum, order) => sum + order.totalCents, 0);
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(); date.setHours(0, 0, 0, 0); date.setDate(date.getDate() - (6 - index));
+      const next = new Date(date); next.setDate(next.getDate() + 1);
+      const dayOrders = paidOrders.filter((order) => { const created = new Date(order.createdAt); return created >= date && created < next; });
+      return { label: date.toLocaleDateString("en-US", { weekday: "short" }), amount: dayOrders.reduce((sum, order) => sum + order.totalCents, 0), count: dayOrders.length };
+    });
+    const maxDay = Math.max(1, ...days.map((day) => day.amount));
+    return { paidOrders, revenueCents, days, maxDay, pending: orders.filter((order) => order.status === "PENDING").length, published: artworks.filter((artwork) => artwork.status === "PUBLISHED").length, drafts: artworks.filter((artwork) => artwork.status === "DRAFT").length };
+  }, [orders, artworks]);
+
   if (!unlocked) return <main className="admin-login admin-login-normal">
     <a className="wordmark" href="/">BUNK<span>24</span></a>
     <div className="eyebrow">STUDIO CONTROL</div>
@@ -107,13 +129,33 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
   </main>;
 
   return <main className="admin-layout">
-    <aside className="admin-side"><a className="wordmark" href="/">BUNK<span>24</span></a><p className="muted small-copy">GALLERY ADMIN</p><nav aria-label="Admin navigation">
-      {([{ key: "overview", label: "Overview", href: "/admin" }, { key: "artwork", label: "Artwork & prints", href: "/admin/artwork" }, { key: "orders", label: "Orders", href: "/admin/orders" }, { key: "printify", label: "Printify", href: "/admin/printify" }] as const).map((item) => <a key={item.key} className={section === item.key ? "admin-nav active" : "admin-nav"} href={item.href}>{item.label}</a>)}
-      <button className="admin-nav" onClick={() => { setUnlocked(false); setToken(""); setPassword(""); }}>Lock workspace</button>
+    <aside className={sidebarExpanded ? "admin-side expanded" : "admin-side"} onMouseEnter={() => setSidebarExpanded(true)} onMouseLeave={() => setSidebarExpanded(false)}><a className="wordmark" href="/" aria-label="BUNK24 home"><span className="side-brand-full">BUNK<span>24</span></span><span className="side-brand-short">B<span>24</span></span></a><p className="muted small-copy side-caption">STUDIO</p><nav aria-label="Admin navigation">
+      {([{ key: "overview", label: "Overview", icon: "⌂", href: "/admin" }, { key: "artwork", label: "Artwork & prints", icon: "▧", href: "/admin/artwork" }, { key: "orders", label: "Orders", icon: "↗", href: "/admin/orders" }, { key: "printify", label: "Printify", icon: "◉", href: "/admin/printify" }] as const).map((item) => <a key={item.key} title={item.label} className={section === item.key ? "admin-nav active" : "admin-nav"} href={item.href}><span className="admin-nav-icon" aria-hidden="true">{item.icon}</span><span className="admin-nav-label">{item.label}</span></a>)}
+      <button className="admin-nav" title="Sign out" onClick={() => { window.sessionStorage.removeItem("bunk24-admin-token"); setUnlocked(false); setToken(""); setPassword(""); }}><span className="admin-nav-icon" aria-hidden="true">↪</span><span className="admin-nav-label">Sign out</span></button>
     </nav></aside>
     <section className="admin-main"><div className="eyebrow">Workspace / {section}</div><h1>{section === "overview" ? "Good to see you." : section === "artwork" ? "Artwork & prints" : section === "orders" ? "Orders" : "Printify connection"}</h1>
       {error && <p className="error-text" role="alert">{error}</p>}{message && <p className="notice" role="status">{message}</p>}
-      {section === "overview" && <><div className="stat-grid"><article className="stat"><span className="muted">ARTWORKS</span><strong>{artworks.length}</strong><p className="muted small-copy">Draft and published works</p></article><article className="stat"><span className="muted">ORDERS</span><strong>{orders.length}</strong><p className="muted small-copy">Most recent 100 orders</p></article><article className="stat"><span className="muted">PRINTIFY</span><strong>{printify?.configured ? "Ready" : "Not set"}</strong><p className="muted small-copy">{printify?.note}</p></article></div><p className="muted">Use the sections to create artwork, publish print listings, review orders, and inspect the connected Printify shop.</p></>}
+      {section === "overview" && <div className="admin-dashboard">
+        <div className="admin-welcome-row"><div><p className="muted small-copy">YOUR STUDIO AT A GLANCE</p><h2>Overview</h2><p className="muted">A snapshot of your gallery activity and print business.</p></div><a className="button" href="/admin/artwork">Add artwork <span>＋</span></a></div>
+        <div className="stat-grid analytics-stats">
+          <article className="stat"><span className="muted">PAID SALES</span><strong>{(analytics.revenueCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong><p className="muted small-copy">Paid, fulfilling and shipped orders</p></article>
+          <article className="stat"><span className="muted">ORDERS</span><strong>{orders.length}</strong><p className="muted small-copy">{analytics.pending} awaiting payment/status update</p></article>
+          <article className="stat"><span className="muted">PUBLISHED WORKS</span><strong>{analytics.published}</strong><p className="muted small-copy">{analytics.drafts} draft works in catalogue</p></article>
+          <article className="stat"><span className="muted">PRINTIFY</span><strong className={printify?.configured ? "status-ready" : ""}>{printify?.configured ? "Connected" : "Not connected"}</strong><p className="muted small-copy">{printify?.configured ? "API credentials detected" : "Connect your shop to continue"}</p></article>
+        </div>
+        <div className="admin-dashboard-grid">
+          <article className="admin-panel analytics-chart"><div className="panel-heading"><div><p className="muted small-copy">LAST 7 DAYS</p><h2>Paid sales activity</h2></div><span className="chart-legend"><i /> Sales</span></div>
+            <div className="sales-chart" role="img" aria-label="Paid sales by day for the last seven days">{analytics.days.map((day) => <div className="sales-day" key={day.label} title={day.label + ": " + (day.amount / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}><div className="sales-bar-track"><div className="sales-bar" style={{ height: `${Math.max(day.amount > 0 ? 8 : 2, day.amount / analytics.maxDay * 100)}%` }} /></div><span>{day.label}</span></div>)}</div>
+            <p className="muted small-copy">Revenue is calculated from orders marked paid, fulfilling, or shipped. New unpaid order records do not count as sales.</p>
+          </article>
+          <article className="admin-panel status-panel"><div className="panel-heading"><div><p className="muted small-copy">ORDER PIPELINE</p><h2>Order status</h2></div><a href="/admin/orders">View all →</a></div>
+            {(["PENDING", "PAID", "FULFILLING", "SHIPPED", "CANCELLED", "REFUNDED"] as const).map((status) => { const count = orders.filter((order) => order.status === status).length; return <div className="status-row" key={status}><span><i className={`status-dot ${status.toLowerCase()}`} />{status.charAt(0) + status.slice(1).toLowerCase()}</span><strong>{count}</strong></div>; })}
+          </article>
+        </div>
+        <article className="admin-panel recent-orders"><div className="panel-heading"><div><p className="muted small-copy">LATEST ACTIVITY</p><h2>Recent orders</h2></div><a href="/admin/orders">All orders →</a></div>
+          {orders.length ? <div className="recent-order-list">{orders.slice(0, 5).map((order) => <div className="recent-order" key={order.id}><div><strong>{order.orderNumber}</strong><p className="muted small-copy">{order.customerName} · {new Date(order.createdAt).toLocaleDateString()}</p></div><span className={`order-status-pill ${order.status.toLowerCase()}`}>{order.status}</span><strong>{(order.totalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong></div>)}</div> : <p className="muted">No orders yet. Once customers place orders, the latest activity will appear here.</p>}
+        </article>
+      </div>}
       {section === "artwork" && <div className="admin-content-grid"><form className="admin-form" onSubmit={createArtwork}><h2>Add artwork</h2><label className="field-label">Title<input name="title" required maxLength={160} /></label><label className="field-label">URL slug<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="my-artwork-title" /></label><label className="field-label">Description<textarea name="description" rows={4} /></label><label className="field-label">Artwork image URL<input name="imageUrl" type="url" placeholder="https://…" /></label><label className="field-label">Print option name<input name="variantName" defaultValue="18 × 24 in print" required /></label><label className="field-label">Retail price (USD)<input name="price" type="number" min="0.01" step="0.01" required /></label><label className="check-label"><input name="featured" type="checkbox" /> Feature on home page</label><label className="check-label"><input name="published" type="checkbox" /> Publish immediately</label><button className="button" disabled={busy}>Save artwork</button></form><div><h2>Catalogue</h2>{artworks.length ? artworks.map((artwork) => <article className="admin-list-item" key={artwork.id}><div><strong>{artwork.title}</strong><p className="muted small-copy">/{artwork.slug} · {artwork.status} · {artwork.variants.length} print option(s)</p></div><button className="button secondary" disabled={busy} onClick={() => void togglePublish(artwork)}>{artwork.status === "PUBLISHED" ? "Unpublish" : "Publish"}</button></article>) : <p className="muted">No artwork yet.</p>}</div></div>}
       {section === "orders" && <div>{orders.length ? orders.map((order) => <article className="admin-list-item" key={order.id}><div><strong>{order.orderNumber}</strong><p className="muted small-copy">{order.customerName} · {order.customerEmail}</p><p className="muted small-copy">{new Date(order.createdAt).toLocaleString()} · {order.status}</p></div><strong>{(order.totalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong></article>) : <p className="muted">No orders have been submitted.</p>}<p className="notice">Orders created before payment integration are unpaid records. They are not automatically sent to Printify.</p></div>}
       {section === "printify" && <div><p>{printify?.note}</p><button className="button" disabled={busy || !printify?.configured} onClick={() => void loadPrintify()}>{busy ? "Loading…" : "Fetch shops & products"}</button>{shops !== null && <><h2>Connected shops</h2><pre className="json-panel">{JSON.stringify(shops, null, 2)}</pre></>}{products !== null && <><h2>Printify products</h2><pre className="json-panel">{JSON.stringify(products, null, 2)}</pre></>}<p className="muted small-copy">This reads your connected Printify account. Product creation, publishing, and paid-order submission are not enabled in this stage.</p></div>}
