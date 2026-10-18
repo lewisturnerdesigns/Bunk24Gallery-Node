@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/$/, "");
@@ -15,6 +16,7 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
   const [password, setPassword] = useState("");
   const [token, setToken] = useState("");
   const [unlocked, setUnlocked] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
   const [section] = useState<Section>(initialSection);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -43,8 +45,19 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
         request("/admin/artworks", {}, authToken), request("/orders/admin", {}, authToken), fetch(`${API}/printify/status`, { cache: "no-store" }).then((r) => r.json()),
       ]);
       setArtworks(a); setOrders(o); setPrintify(p); setUnlocked(true);
-    } catch (e) { setError(e instanceof Error ? e.message : "Unable to connect."); setUnlocked(false); }
-    finally { setBusy(false); }
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : "Unable to connect.";
+      setError(detail);
+      // Keep the dashboard open for server/database errors; only auth failures sign out.
+      if (/401|403|session has expired|invalid session|please sign in/i.test(detail)) {
+        window.sessionStorage.removeItem("bunk24-admin-token");
+        setToken("");
+        setUnlocked(false);
+      }
+    } finally {
+      setAuthReady(true);
+      setBusy(false);
+    }
   }
 
   async function login(event: FormEvent<HTMLFormElement>) {
@@ -62,7 +75,12 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
 
   useEffect(() => {
     const saved = window.sessionStorage.getItem("bunk24-admin-token");
-    if (saved) { setToken(saved); void load(saved); }
+    if (saved) {
+      setToken(saved);
+      void load(saved);
+    } else {
+      setAuthReady(true);
+    }
     // Restore the short-lived admin session when moving between admin pages.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -120,6 +138,13 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
     return { paidOrders, revenueCents, days, maxDay, pending: orders.filter((order) => order.status === "PENDING").length, published: artworks.filter((artwork) => artwork.status === "PUBLISHED").length, drafts: artworks.filter((artwork) => artwork.status === "DRAFT").length };
   }, [orders, artworks]);
 
+  if (!authReady) return <main className="admin-login admin-login-normal admin-session-check">
+    <Link className="wordmark" href="/">BUNK<span>24</span></Link>
+    <div className="eyebrow">STUDIO CONTROL</div>
+    <h1>Opening your studio…</h1>
+    <p className="muted">Restoring your secure session.</p>
+  </main>;
+
   if (!unlocked) return <main className="admin-login admin-login-normal">
     <a className="wordmark" href="/">BUNK<span>24</span></a>
     <div className="eyebrow">STUDIO CONTROL</div>
@@ -135,14 +160,14 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
   </main>;
 
   return <main className="admin-layout">
-    <aside className={sidebarExpanded ? "admin-side expanded" : "admin-side"} onMouseEnter={() => setSidebarExpanded(true)} onMouseLeave={() => setSidebarExpanded(false)}><a className="wordmark" href="/" aria-label="BUNK24 home"><span className="side-brand-full">BUNK<span>24</span></span><span className="side-brand-short">B<span>24</span></span></a><p className="muted small-copy side-caption">STUDIO</p><nav aria-label="Admin navigation">
-      {([{ key: "overview", label: "Overview", icon: "⌂", href: "/admin" }, { key: "artwork", label: "Artwork & prints", icon: "▧", href: "/admin/artwork" }, { key: "orders", label: "Orders", icon: "↗", href: "/admin/orders" }, { key: "printify", label: "Printify", icon: "◉", href: "/admin/printify" }] as const).map((item) => <a key={item.key} title={item.label} className={section === item.key ? "admin-nav active" : "admin-nav"} href={item.href}><span className="admin-nav-icon" aria-hidden="true">{item.icon}</span><span className="admin-nav-label">{item.label}</span></a>)}
+    <aside className={sidebarExpanded ? "admin-side expanded" : "admin-side"} onMouseEnter={() => setSidebarExpanded(true)} onMouseLeave={() => setSidebarExpanded(false)}><Link className="wordmark" href="/" aria-label="BUNK24 home"><span className="side-brand-full">BUNK<span>24</span></span><span className="side-brand-short">B<span>24</span></span></Link><p className="muted small-copy side-caption">STUDIO</p><nav aria-label="Admin navigation">
+      {([{ key: "overview", label: "Overview", icon: "⌂", href: "/admin" }, { key: "artwork", label: "Artwork & prints", icon: "▧", href: "/admin/artwork" }, { key: "orders", label: "Orders", icon: "↗", href: "/admin/orders" }, { key: "printify", label: "Printify", icon: "◉", href: "/admin/printify" }] as const).map((item) => <Link key={item.key} title={item.label} className={section === item.key ? "admin-nav active" : "admin-nav"} href={item.href}><span className="admin-nav-icon" aria-hidden="true">{item.icon}</span><span className="admin-nav-label">{item.label}</span></Link>)}
       <button className="admin-nav" title="Sign out" onClick={() => { window.sessionStorage.removeItem("bunk24-admin-token"); setUnlocked(false); setToken(""); setPassword(""); }}><span className="admin-nav-icon" aria-hidden="true">↪</span><span className="admin-nav-label">Sign out</span></button>
     </nav></aside>
     <section className="admin-main"><div className="eyebrow">Workspace / {section}</div><h1>{section === "overview" ? "Good to see you." : section === "artwork" ? "Artwork & prints" : section === "orders" ? "Orders" : "Printify connection"}</h1>
       {error && <p className="error-text" role="alert">{error}</p>}{message && <p className="notice" role="status">{message}</p>}
       {section === "overview" && <div className="admin-dashboard">
-        <div className="admin-welcome-row"><div><p className="muted small-copy">YOUR STUDIO AT A GLANCE</p><h2>Overview</h2><p className="muted">A snapshot of your gallery activity and print business.</p></div><a className="button" href="/admin/artwork">Add artwork <span>＋</span></a></div>
+        <div className="admin-welcome-row"><div><p className="muted small-copy">YOUR STUDIO AT A GLANCE</p><h2>Overview</h2><p className="muted">A snapshot of your gallery activity and print business.</p></div><Link className="button" href="/admin/artwork">Add artwork <span>＋</span></Link></div>
         <div className="stat-grid analytics-stats">
           <article className="stat"><span className="muted">PAID SALES</span><strong>{(analytics.revenueCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong><p className="muted small-copy">Paid, fulfilling and shipped orders</p></article>
           <article className="stat"><span className="muted">ORDERS</span><strong>{orders.length}</strong><p className="muted small-copy">{analytics.pending} awaiting payment/status update</p></article>
@@ -154,11 +179,11 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
             <div className="sales-chart" role="img" aria-label="Paid sales by day for the last seven days">{analytics.days.map((day) => <div className="sales-day" key={day.label} title={day.label + ": " + (day.amount / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}><div className="sales-bar-track"><div className="sales-bar" style={{ height: `${Math.max(day.amount > 0 ? 8 : 2, day.amount / analytics.maxDay * 100)}%` }} /></div><span>{day.label}</span></div>)}</div>
             <p className="muted small-copy">Revenue is calculated from orders marked paid, fulfilling, or shipped. New unpaid order records do not count as sales.</p>
           </article>
-          <article className="admin-panel status-panel"><div className="panel-heading"><div><p className="muted small-copy">ORDER PIPELINE</p><h2>Order status</h2></div><a href="/admin/orders">View all →</a></div>
+          <article className="admin-panel status-panel"><div className="panel-heading"><div><p className="muted small-copy">ORDER PIPELINE</p><h2>Order status</h2></div><Link href="/admin/orders">View all →</Link></div>
             {(["PENDING", "PAID", "FULFILLING", "SHIPPED", "CANCELLED", "REFUNDED"] as const).map((status) => { const count = orders.filter((order) => order.status === status).length; return <div className="status-row" key={status}><span><i className={`status-dot ${status.toLowerCase()}`} />{status.charAt(0) + status.slice(1).toLowerCase()}</span><strong>{count}</strong></div>; })}
           </article>
         </div>
-        <article className="admin-panel recent-orders"><div className="panel-heading"><div><p className="muted small-copy">LATEST ACTIVITY</p><h2>Recent orders</h2></div><a href="/admin/orders">All orders →</a></div>
+        <article className="admin-panel recent-orders"><div className="panel-heading"><div><p className="muted small-copy">LATEST ACTIVITY</p><h2>Recent orders</h2></div><Link href="/admin/orders">All orders →</Link></div>
           {orders.length ? <div className="recent-order-list">{orders.slice(0, 5).map((order) => <div className="recent-order" key={order.id}><div><strong>{order.orderNumber}</strong><p className="muted small-copy">{order.customerName} · {new Date(order.createdAt).toLocaleDateString()}</p></div><span className={`order-status-pill ${order.status.toLowerCase()}`}>{order.status}</span><strong>{(order.totalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong></div>)}</div> : <p className="muted">No orders yet. Once customers place orders, the latest activity will appear here.</p>}
         </article>
       </div>}
