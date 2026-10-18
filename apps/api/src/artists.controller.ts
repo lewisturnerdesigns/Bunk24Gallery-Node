@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Headers, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Headers, NotFoundException, Param, Post } from "@nestjs/common";
 import { PrismaService } from "./prisma.service";
 import { requireAdminToken } from "./admin-auth";
 
@@ -16,6 +16,19 @@ export class ArtistsController {
       },
       orderBy: { name: "asc" },
     });
+  }
+
+  @Get("artists/:slug")
+  async bySlug(@Param("slug") slug: string) {
+    const artist = await this.prisma.artist.findFirst({
+      where: { slug, artworks: { some: { status: "PUBLISHED" } } },
+      select: {
+        id: true, name: true, slug: true, bio: true, imageUrl: true,
+        _count: { select: { artworks: { where: { status: "PUBLISHED" } } } },
+      },
+    });
+    if (!artist) throw new NotFoundException("Artist not found");
+    return artist;
   }
 
   @Get("admin/artists")
