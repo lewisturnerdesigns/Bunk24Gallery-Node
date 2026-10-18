@@ -18,7 +18,7 @@ export class PrintifyController {
   }
 
   @Get("products")
-  async products(@Headers("x-admin-key") key: string) {
+  async products(@Headers("authorization") authorization: string) {
     requireAdminToken(authorization)
     return this.printify.products();
   }
