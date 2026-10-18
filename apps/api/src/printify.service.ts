@@ -63,10 +63,16 @@ export class PrintifyService {
   }
 
   async productById(productId: string): Promise<PrintifyProduct> {
-    const payload: any = await this.products();
-    const list: PrintifyProduct[] = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
-    const product = list.find((item) => String(item.id ?? "") === productId);
-    if (!product) throw new NotFoundException("Printify product was not found in the configured shop.");
-    return product;
+    if (!this.token || !this.shopId) throw new ServiceUnavailableException("Configure PRINTIFY_API_TOKEN and PRINTIFY_SHOP_ID first.");
+    const response = await fetch(
+      `https://api.printify.com/v1/shops/${encodeURIComponent(this.shopId)}/products/${encodeURIComponent(productId)}.json`,
+      {
+        headers: { Authorization: `Bearer ${this.token}`, "User-Agent": "BUNK24-Gallery/1.0" },
+        cache: "no-store",
+      },
+    );
+    if (response.status === 404) throw new NotFoundException("Printify product was not found in the configured shop.");
+    if (!response.ok) throw new ServiceUnavailableException(`Printify product request failed with status ${response.status}`);
+    return response.json();
   }
 }
