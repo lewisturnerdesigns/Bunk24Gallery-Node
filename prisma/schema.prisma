@@ -34,7 +34,7 @@ model Artwork {
   id          String        @id @default(cuid())
   title       String
   slug        String        @unique
-  description Text?
+  description String?       @db.Text
   status      ArtworkStatus @default(DRAFT)
   imageUrl    String?       @db.VarChar(2048)
   featured    Boolean       @default(false)
