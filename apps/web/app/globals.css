@@ -327,3 +327,33 @@
 .order-status-pill{padding:6px 8px;background:#e9e5dc;font:8px var(--mono);white-space:nowrap}.order-status-pill.paid,.order-status-pill.shipped{background:#e0eade;color:#42694b}.order-status-pill.pending{background:#f8e5dd;color:#9b4d33}
 @media(max-width:1100px){.analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-dashboard-grid{grid-template-columns:1fr}.admin-main{padding-left:28px;padding-right:28px}}
 @media(max-width:680px){.admin-side{flex-basis:58px;width:58px;padding:20px 7px}.admin-side:hover,.admin-side.expanded{width:220px;flex-basis:220px;padding-left:13px;padding-right:13px}.admin-main{padding:30px 15px 45px}.admin-main>h1{font-size:34px}.admin-welcome-row{align-items:flex-start;flex-direction:column}.analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.analytics-stats .stat{padding:14px}.analytics-stats .stat>strong{font-size:22px}.admin-panel{padding:16px}.sales-chart{gap:7px;height:170px}.sales-bar-track{height:140px}.recent-order{grid-template-columns:minmax(0,1fr) auto;gap:10px}.recent-order>strong{grid-column:2;grid-row:1}.recent-order .order-status-pill{grid-column:1;grid-row:2;justify-self:start}.admin-side .side-caption{margin-left:8px}}
+
+
+/* Admin polish: clear hierarchy, steady navigation, and restrained studio styling */
+.admin-layout{background:#f4f1e9}
+.admin-side{box-shadow:8px 0 28px rgba(32,32,29,.05)}
+.admin-side .wordmark,.admin-side .admin-nav{text-decoration:none}
+.admin-main{max-width:1800px;margin:0 auto}
+.admin-main>.eyebrow{font:9px var(--mono);letter-spacing:.13em;color:#858176}
+.admin-main>h1{line-height:1.02}
+.admin-welcome-row{padding-bottom:22px;border-bottom:1px solid var(--line)}
+.admin-welcome-row>.button{display:inline-flex;align-items:center;gap:18px;min-height:44px;padding:0 17px;text-decoration:none}
+.analytics-stats .stat{border-radius:2px;box-shadow:0 5px 18px rgba(32,32,29,.025)}
+.analytics-stats .stat>span{color:#817c70}
+.admin-panel{border-radius:2px;box-shadow:0 5px 18px rgba(32,32,29,.025)}
+.panel-heading>a{color:var(--ink);text-decoration:none}
+.panel-heading>a:hover{color:var(--orange)}
+.recent-order{transition:background .15s}
+.recent-order:hover{background:#f3f0e8}
+.admin-session-check{min-height:240px;justify-content:center}
+.admin-session-check>.wordmark{margin-bottom:24px}
+.admin-session-check>h1{font-size:clamp(30px,4vw,44px)!important}
+.admin-login-normal{box-sizing:border-box}
+.admin-side .admin-nav:focus-visible,.admin-side .wordmark:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+@media(max-width:680px){
+  .admin-layout{min-height:100dvh}
+  .admin-side{position:sticky;top:0;height:100dvh;min-height:0}
+  .admin-main{padding-top:25px}
+  .admin-welcome-row{padding-bottom:18px}
+  .analytics-stats .stat>strong{font-size:clamp(18px,5vw,23px)}
+}
