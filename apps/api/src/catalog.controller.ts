@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Get, Headers, NotFoundException, Param, Patch, Post, Query } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "./prisma.service";
 import { requireAdminToken } from "./admin-auth";
 
@@ -6,7 +7,7 @@ import { requireAdminToken } from "./admin-auth";
 export class CatalogController {
   constructor(private readonly prisma: PrismaService) {}
 
-  private publicArtworkInclude() {
+  private publicArtworkInclude(): Prisma.ArtworkInclude {
     return {
       artist: { select: { id: true, name: true, slug: true, bio: true, imageUrl: true } },
       variants: { where: { active: true }, orderBy: { priceCents: "asc" as const } },
