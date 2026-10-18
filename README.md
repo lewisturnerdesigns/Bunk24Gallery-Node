@@ -27,6 +27,7 @@ Public catalogue endpoints:
 - `GET /api/artworks/featured` — published featured artwork.
 - `GET /api/artworks/:slug` — one published artwork with active variants and artist information.
 - `GET /api/artists` — artists with published artwork.
+- `GET /api/artists/:slug` — one artist profile and published-work count.
 - `GET /api/artists/:slug/artworks` — published artwork for one artist.
 
 Admin endpoints (Bearer admin session required):
