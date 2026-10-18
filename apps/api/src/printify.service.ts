@@ -35,12 +35,31 @@ export class PrintifyService {
 
   async products() {
     if (!this.token || !this.shopId) throw new ServiceUnavailableException("Configure PRINTIFY_API_TOKEN and PRINTIFY_SHOP_ID first.");
-    const response = await fetch(`https://api.printify.com/v1/shops/${encodeURIComponent(this.shopId)}/products.json`, {
-      headers: { Authorization: `Bearer ${this.token}`, "User-Agent": "BUNK24-Gallery/1.0" },
-      cache: "no-store",
-    });
-    if (!response.ok) throw new ServiceUnavailableException(`Printify products request failed with status ${response.status}`);
-    return response.json();
+    const allProducts: PrintifyProduct[] = [];
+    let page = 1;
+    let lastPage = 1;
+
+    // Printify paginates product catalogues. Read every page, but cap requests defensively.
+    do {
+      const url = `https://api.printify.com/v1/shops/${encodeURIComponent(this.shopId)}/products.json?page=${page}&limit=50`;
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${this.token}`, "User-Agent": "BUNK24-Gallery/1.0" },
+        cache: "no-store",
+      });
+      if (!response.ok) throw new ServiceUnavailableException(`Printify products request failed with status ${response.status} on page ${page}`);
+      const payload: any = await response.json();
+      if (Array.isArray(payload)) {
+        allProducts.push(...payload);
+        break;
+      }
+      const rows = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload?.items) ? payload.items : [];
+      allProducts.push(...rows);
+      const reportedLastPage = Number(payload?.last_page ?? payload?.lastPage ?? page);
+      lastPage = Number.isInteger(reportedLastPage) && reportedLastPage >= page ? Math.min(reportedLastPage, 100) : page;
+      page += 1;
+    } while (page <= lastPage && page <= 100);
+
+    return allProducts;
   }
 
   async productById(productId: string): Promise<PrintifyProduct> {
