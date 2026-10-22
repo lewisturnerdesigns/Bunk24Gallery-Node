@@ -12,7 +12,7 @@ export default function PublicPageTransition({ children }: { children: ReactNode
   const pathname = usePathname();
   const router = useRouter();
   const pendingResolve = useRef<(() => void) | null>(null);
-  const fallbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fallbackTimer = useRef<number | null>(null);
   const isAdmin = pathname.startsWith("/admin");
 
   useEffect(() => {
