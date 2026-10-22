@@ -16,7 +16,7 @@ export default function PublicPageTransition({ children }: { children: ReactNode
   const isAdmin = pathname.startsWith("/admin");
 
   useEffect(() => {
-    if (isAdmin || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (isAdmin || pendingResolve.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const body = document.body;
     body.classList.remove("public-route-changing");
     void body.offsetWidth;
@@ -69,7 +69,6 @@ export default function PublicPageTransition({ children }: { children: ReactNode
     if (transitionDocument.startViewTransition) {
       transitionDocument.startViewTransition(navigate);
     } else {
-      document.body.classList.add("public-route-changing");
       router.push(nextUrl);
     }
   }, [isAdmin, pathname, router]);
