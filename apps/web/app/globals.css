@@ -824,3 +824,220 @@ body.public-route-changing .route-frame-public {
   }
   .hero-title-line > span { opacity: 1; }
 }
+
+
+/* Reference direction: expressive typography for the landing page, artist-led portfolio for Shop. */
+.hero-cinematic {
+  grid-template-columns: minmax(0, 1.06fr) minmax(300px, .84fr);
+  gap: clamp(34px, 5.5vw, 90px);
+  min-height: min(900px, calc(100svh - 84px));
+  padding-left: clamp(6%, 8.5vw, 12%);
+  padding-right: clamp(6%, 8.5vw, 12%);
+}
+.hero-cinematic h1 {
+  font-size: clamp(82px, 10.8vw, 158px);
+  letter-spacing: -.105em;
+  line-height: .77;
+}
+.hero-cinematic .hero-title-line:nth-child(1) > span { font-weight: 600; }
+.hero-cinematic .hero-title-line:nth-child(2) > span {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -.105em;
+}
+.hero-cinematic .hero-title-last > span {
+  font-family: var(--sans);
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: -.11em;
+}
+.hero-cinematic .hero-kicker {
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: .16em;
+}
+.hero-cinematic .hero-description { max-width: 330px; }
+.hero-art-stage {
+  padding: 0 0 36px 0;
+  transform-origin: center;
+}
+.hero-art-stage::before {
+  top: 22px;
+  right: -16px;
+  bottom: 18px;
+  left: 16px;
+  border-color: var(--ink);
+}
+.hero-art-stage .artwork-placeholder,
+.hero-art-stage .hero-featured-art {
+  display: block;
+  width: 100%;
+  height: clamp(390px, 47vw, 630px);
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+  object-fit: cover;
+  object-position: center;
+  background: #c6b4a1;
+  box-shadow: 0 30px 90px rgba(32,32,29,.12);
+  animation: b24-image-settle 1.5s .15s cubic-bezier(.16,1,.3,1) both;
+}
+.hero-art-mark {
+  position: absolute;
+  z-index: 3;
+  top: -19px;
+  right: -24px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 13px 15px 12px;
+  background: var(--orange);
+  color: white;
+  transform: rotate(3deg);
+  animation: b24-copy-arrive .7s .65s both;
+}
+.hero-art-mark > span {
+  font: 500 22px/.9 var(--sans);
+  letter-spacing: -.1em;
+}
+.hero-art-mark small {
+  font: 7px var(--mono);
+  letter-spacing: .12em;
+}
+.hero-art-stage .art-label {
+  right: 0;
+  bottom: 0;
+  color: var(--ink);
+}
+.hero-index { font-size: 8px; letter-spacing: .14em; }
+
+/* Artist portfolio shop header */
+.shop-portfolio-hero {
+  padding: clamp(56px, 8vw, 110px) 9% 36px;
+  overflow: hidden;
+  position: relative;
+}
+.shop-portfolio-topline,
+.shop-portfolio-bottomline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font: 8px var(--mono);
+  letter-spacing: .14em;
+  color: var(--muted);
+}
+.shop-portfolio-topline { padding-bottom: 19px; border-bottom: 1px solid var(--line); }
+.shop-portfolio-title-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(190px, .55fr);
+  gap: clamp(24px, 6vw, 100px);
+  align-items: end;
+  padding: clamp(30px, 5vw, 70px) 0 clamp(36px, 5vw, 66px);
+}
+.shop-portfolio-title-row h1 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: clamp(76px, 12vw, 174px);
+  line-height: .76;
+  letter-spacing: -.105em;
+  font-weight: 600;
+  margin: 0;
+}
+.shop-title-serif {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -.09em;
+  padding-left: .04em;
+}
+.shop-title-sans {
+  font-family: var(--sans);
+  font-weight: 600;
+  margin-top: .1em;
+}
+.shop-title-period { color: var(--orange); }
+.shop-portfolio-intro-copy {
+  max-width: 285px;
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--muted);
+}
+.shop-portfolio-bottomline {
+  padding-top: 17px;
+  border-top: 1px solid var(--line);
+}
+.shop-portfolio-bottomline i {
+  color: var(--orange);
+  font-size: 15px;
+  font-style: normal;
+  padding-left: 10px;
+}
+.shop-bento-grid { padding-top: 24px; }
+.shop-fluid-grid .shop-bento-card-1 .product-image { aspect-ratio: 5 / 4; }
+.shop-fluid-grid .product-image {
+  overflow: hidden;
+  background: #e8e3d8;
+}
+.shop-fluid-grid .product-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1s cubic-bezier(.22,1,.36,1), filter .7s ease;
+}
+.shop-fluid-grid .shop-bento-card:hover .product-image img,
+.shop-fluid-grid .shop-bento-card:focus-within .product-image img { transform: scale(1.045); }
+@media(max-width:850px) {
+  .hero-cinematic {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, .82fr);
+    padding-left: 7%;
+    padding-right: 7%;
+    gap: 28px;
+  }
+  .hero-cinematic h1 { font-size: clamp(70px, 10.8vw, 104px); }
+  .hero-art-stage .artwork-placeholder,
+  .hero-art-stage .hero-featured-art { height: 430px; }
+  .shop-portfolio-hero { padding-left: 7%; padding-right: 7%; }
+  .shop-portfolio-title-row { grid-template-columns: minmax(0, 1fr) minmax(170px, .6fr); gap: 25px; }
+  .shop-portfolio-title-row h1 { font-size: clamp(72px, 11vw, 112px); }
+}
+@media(max-width:600px) {
+  .hero-cinematic {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 36px;
+    padding: 48px 7% 78px;
+  }
+  .hero-cinematic h1 { font-size: clamp(68px, 16.5vw, 100px); }
+  .hero-cinematic .hero-title-line:nth-child(2) > span { letter-spacing: -.1em; }
+  .hero-art-stage { margin: 0 5% 0 2%; }
+  .hero-art-stage .artwork-placeholder,
+  .hero-art-stage .hero-featured-art { height: min(112vw, 450px); }
+  .hero-art-mark { top: -15px; right: -17px; padding: 10px 11px; }
+  .hero-art-mark > span { font-size: 18px; }
+  .hero-art-mark small { font-size: 6px; }
+  .hero-index { bottom: 24px; }
+  .shop-portfolio-hero { padding: 48px 7% 26px; }
+  .shop-portfolio-topline, .shop-portfolio-bottomline { font-size: 7px; letter-spacing: .08em; }
+  .shop-portfolio-topline span:last-child { text-align: right; }
+  .shop-portfolio-title-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 27px;
+    padding: 38px 0 32px;
+  }
+  .shop-portfolio-title-row h1 { font-size: clamp(68px, 15.5vw, 98px); line-height: .8; }
+  .shop-portfolio-intro-copy { max-width: 330px; font-size: 12px; }
+  .shop-portfolio-bottomline { align-items: flex-start; }
+  .shop-portfolio-bottomline span:last-child { text-align: right; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .hero-art-stage .hero-featured-art,
+  .hero-art-mark { animation: none !important; }
+}
