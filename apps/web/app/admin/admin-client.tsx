@@ -1,13 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import PrintifyManager from "./printify/printify-manager";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/$/, "");
 type Variant = { id: string; name: string; priceCents: number };
-type Artwork = { id: string; title: string; slug: string; status: string; imageUrl?: string | null; variants: Variant[] };
+type Artwork = { id: string; title: string; slug: string; status: string; imageUrl?: string | null; printifyProductId?: string | null; variants: Variant[] };
 type Order = { id: string; orderNumber: string; customerName: string; customerEmail: string; status: string; totalCents: number; createdAt: string };
-type PrintifyStatus = { configured: boolean; tokenConfigured?: boolean; shopConfigured?: boolean; note: string };
+type PrintifyStatus = { configured: boolean; tokenConfigured?: boolean; shopConfigured?: boolean; catalogImportEnabled?: boolean; orderSubmissionEnabled?: boolean; note: string };
+type PrintifyProduct = {
+  id: string | number;
+  title?: string;
+  description?: string;
+  images?: { src?: string; is_default?: boolean }[];
+  variants?: { id: string | number; title?: string; price?: number; is_enabled?: boolean; is_available?: boolean }[];
+};
 
 type Section = "overview" | "artwork" | "orders" | "printify";
 
@@ -123,10 +131,36 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
         return;
       }
       const p = await request("/printify/products");
-      setProducts(p); setMessage("Printify shops and products loaded.");
+      setProducts(p);
+      setMessage("Printify products loaded in read-only mode. Choose Import as draft to copy a product into BUNK24.");
     } catch (e) { setError(e instanceof Error ? e.message : "Could not load Printify."); }
     finally { setBusy(false); }
   }
+
+  async function importPrintifyProduct(productId: string | number) {
+    setError(""); setMessage(""); setBusy(true);
+    try {
+      const result = await request(`/printify/import/${encodeURIComponent(String(productId))}`, { method: "POST", body: JSON.stringify({}) });
+      const latestArtwork = await request("/admin/artworks");
+      setArtworks(latestArtwork);
+      setMessage(result.message || "Product imported as a draft.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not import this product.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const printifyProducts = useMemo<PrintifyProduct[]>(() => {
+    if (Array.isArray(products)) return products as PrintifyProduct[];
+    if (products && typeof products === "object" && Array.isArray((products as { data?: unknown }).data)) {
+      return (products as { data: PrintifyProduct[] }).data;
+    }
+    if (products && typeof products === "object" && Array.isArray((products as { items?: unknown }).items)) {
+      return (products as { items: PrintifyProduct[] }).items;
+    }
+    return [];
+  }, [products]);
 
   const analytics = useMemo(() => {
     const paidOrders = orders.filter((order) => order.status === "PAID" || order.status === "FULFILLING" || order.status === "SHIPPED");
@@ -192,7 +226,8 @@ export default function AdminClient({ initialSection = "overview" }: { initialSe
       </div>}
       {section === "artwork" && <div className="admin-content-grid"><form className="admin-form" onSubmit={createArtwork}><h2>Add artwork</h2><label className="field-label">Title<input name="title" required maxLength={160} /></label><label className="field-label">URL slug<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="my-artwork-title" /></label><label className="field-label">Description<textarea name="description" rows={4} /></label><label className="field-label">Artwork image URL<input name="imageUrl" type="url" placeholder="https://…" /></label><label className="field-label">Print option name<input name="variantName" defaultValue="18 × 24 in print" required /></label><label className="field-label">Retail price (USD)<input name="price" type="number" min="0.01" step="0.01" required /></label><label className="check-label"><input name="featured" type="checkbox" /> Feature on home page</label><label className="check-label"><input name="published" type="checkbox" /> Publish immediately</label><button className="button" disabled={busy}>Save artwork</button></form><div><h2>Catalogue</h2>{artworks.length ? artworks.map((artwork) => <article className="admin-list-item" key={artwork.id}><div><strong>{artwork.title}</strong><p className="muted small-copy">/{artwork.slug} · {artwork.status} · {artwork.variants.length} print option(s)</p></div><button className="button secondary" disabled={busy} onClick={() => void togglePublish(artwork)}>{artwork.status === "PUBLISHED" ? "Unpublish" : "Publish"}</button></article>) : <p className="muted">No artwork yet.</p>}</div></div>}
       {section === "orders" && <div>{orders.length ? orders.map((order) => <article className="admin-list-item" key={order.id}><div><strong>{order.orderNumber}</strong><p className="muted small-copy">{order.customerName} · {order.customerEmail}</p><p className="muted small-copy">{new Date(order.createdAt).toLocaleString()} · {order.status}</p></div><strong>{(order.totalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}</strong></article>) : <p className="muted">No orders have been submitted.</p>}<p className="notice">Orders created before payment integration are unpaid records. They are not automatically sent to Printify.</p></div>}
-      {section === "printify" && <div><p>{printify?.note}</p><button className="button" disabled={busy || !printify?.tokenConfigured} onClick={() => void loadPrintify()}>{busy ? "Loading…" : "Fetch shops & products"}</button>{shops !== null && <><h2>Connected shops</h2><pre className="json-panel">{JSON.stringify(shops, null, 2)}</pre></>}{products !== null && <><h2>Printify products</h2><pre className="json-panel">{JSON.stringify(products, null, 2)}</pre></>}<p className="muted small-copy">This reads your connected Printify account. Product creation, publishing, and paid-order submission are not enabled in this stage.</p></div>}
+      {section === "printify" && <PrintifyManager token={token} />}
+
     </section>
   </main>;
 }
