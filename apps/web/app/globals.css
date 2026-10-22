@@ -473,3 +473,94 @@
   .shop-bento-card-1 .product-image,.shop-bento-card-2 .product-image,.shop-bento-card-3 .product-image,.shop-bento-card-4 .product-image,.shop-bento-card-5 .product-image,.shop-bento-card-6 .product-image{aspect-ratio:4/5}
   .shop-bento-card .product-meta{display:grid;grid-template-columns:1fr;gap:8px;padding:12px 0}
 }
+
+
+/* BUNK24 cinematic entrance + fluid editorial cards */
+.hero-cinematic{isolation:isolate;overflow:hidden;min-height:680px;padding-top:84px;padding-bottom:100px}
+.hero-cinematic:after{content:"";position:absolute;z-index:-1;top:0;right:0;width:47%;height:100%;background:radial-gradient(ellipse at 60% 45%,#f05a3512 0%,transparent 65%);pointer-events:none}
+.hero-copy{position:relative;z-index:2}
+.hero-kicker{display:flex;align-items:center;gap:13px;animation:b24-fade-up .7s .08s both}
+.hero-kicker-line{display:inline-block;width:44px;height:1px;background:var(--orange);transform-origin:left;animation:b24-line-in .65s .45s both}
+.hero-cinematic .hero-title-line{display:block;overflow:hidden;padding:0 .06em .09em 0;margin-bottom:-.08em}
+.hero-cinematic .hero-title-line>span{display:block;transform:translateY(115%) rotate(2deg);transform-origin:left bottom;animation:b24-title-in .95s cubic-bezier(.16,1,.3,1) forwards}
+.hero-cinematic .hero-title-line:nth-child(1)>span{animation-delay:.14s}
+.hero-cinematic .hero-title-line:nth-child(2)>span{animation-delay:.27s}
+.hero-cinematic .hero-title-line:nth-child(3)>span{animation-delay:.4s}
+.hero-cinematic h1{font-size:clamp(78px,10.2vw,142px);line-height:.81;letter-spacing:-.095em;margin:0 0 32px}
+.hero-cinematic .hero-title-last>span{font-family:var(--serif);font-weight:500;font-style:italic;letter-spacing:-.095em}
+.hero-period{color:var(--orange)}
+.hero-description{opacity:0;transform:translateY(18px);animation:b24-fade-up .8s .72s forwards}
+.hero-actions{opacity:0;transform:translateY(16px);animation:b24-fade-up .75s .86s forwards}
+.hero-actions .button{transition:transform .35s cubic-bezier(.2,.8,.2,1),background .25s,color .25s,box-shadow .35s}
+.hero-actions .hero-primary{box-shadow:7px 7px 0 var(--orange)}
+.hero-actions .hero-primary:hover{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--orange)}
+.hero-signature{margin-top:30px;font:8px var(--mono);letter-spacing:.11em;color:var(--muted);opacity:0;animation:b24-fade-up .65s 1s forwards}
+.hero-art-stage{perspective:1200px;transform-style:preserve-3d;animation:b24-stage-in 1.15s cubic-bezier(.16,1,.3,1) .18s both}
+.hero-art-stage .artwork-placeholder{min-height:clamp(380px,42vw,550px);background-size:cover;transform-origin:center;clip-path:inset(8% 5% 8% 5% round 2px);animation:b24-art-reveal 1.35s cubic-bezier(.16,1,.3,1) .28s forwards,b24-art-breathe 12s 1.8s ease-in-out infinite alternate}
+.hero-art-stage:before{transform:translate(16px,16px);opacity:0;animation:b24-frame-in .85s .7s forwards}
+.hero-art-glow{position:absolute;z-index:0;inset:10% -7% 5% 7%;background:var(--orange);filter:blur(75px);opacity:0;animation:b24-glow-in 1.2s .6s forwards}
+.hero-art-orbit{position:absolute;z-index:3;top:-20px;right:-20px;width:78px;height:78px;display:grid;place-items:center;border:1px solid var(--orange);border-radius:50%;background:var(--paper);color:var(--orange);font:italic 24px var(--serif);animation:b24-orbit-in .8s .95s both}
+.hero-art-stage .art-label{opacity:0;animation:b24-fade-up .7s 1.05s forwards}
+.hero-index{position:absolute;left:9%;bottom:30px;font:9px var(--mono);letter-spacing:.12em;color:var(--muted);opacity:0;animation:b24-fade-up .6s 1s forwards}
+.hero-index span{color:var(--orange)}
+@keyframes b24-title-in{0%{transform:translateY(115%) rotate(2deg)}100%{transform:translateY(0) rotate(0)}}
+@keyframes b24-fade-up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes b24-line-in{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes b24-stage-in{from{opacity:0;transform:translate3d(28px,28px,0) rotateY(-7deg) scale(.94)}to{opacity:1;transform:translate3d(0,0,0) rotateY(0) scale(1)}}
+@keyframes b24-art-reveal{to{clip-path:inset(0 0 0 0 round 2px)}}
+@keyframes b24-frame-in{from{opacity:0;transform:translate(0,0)}to{opacity:1;transform:translate(16px,16px)}}
+@keyframes b24-glow-in{from{opacity:0}to{opacity:.22}}
+@keyframes b24-orbit-in{from{opacity:0;transform:scale(.65) rotate(-35deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes b24-art-breathe{from{background-position:48% 48%;transform:scale(1)}to{background-position:53% 52%;transform:scale(1.035)}}
+.gallery-bento-grid{grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-flow:dense;align-items:stretch;gap:20px}
+.gallery-bento-card{grid-column:span 3;min-width:0;transform:translateY(28px) scale(.985);opacity:0;animation:b24-card-arrive .8s cubic-bezier(.2,.75,.25,1) forwards;transition:grid-column .55s cubic-bezier(.2,.75,.25,1),transform .5s cubic-bezier(.2,.75,.25,1),filter .4s}
+.gallery-bento-card-1{grid-column:span 6;animation-delay:.1s}
+.gallery-bento-card-2{grid-column:span 3;animation-delay:.2s}
+.gallery-bento-card-3{grid-column:span 3;animation-delay:.3s}
+.gallery-bento-card-4{grid-column:span 4;animation-delay:.4s}
+.gallery-bento-grid:has(.gallery-bento-card:hover) .gallery-bento-card:not(:hover){grid-column:span 2;filter:saturate(.72)}
+.gallery-bento-grid .gallery-bento-card:hover,.gallery-bento-grid .gallery-bento-card:focus-within{grid-column:span 5;transform:translateY(-5px);z-index:2}
+.gallery-bento-image{overflow:hidden;isolation:isolate}
+.gallery-bento-image img{transition:transform .85s cubic-bezier(.2,.75,.25,1),filter .6s}
+.gallery-bento-card:hover .gallery-bento-image img,.gallery-bento-card:focus-within .gallery-bento-image img{transform:scale(1.075);filter:saturate(1.08)}
+.gallery-bento-index{transition:background .25s,color .25s,transform .35s}
+.gallery-bento-card:hover .gallery-bento-index{background:var(--orange);color:white;transform:translateY(-3px)}
+.gallery-bento-note{grid-column:span 4;display:flex;flex-direction:column;justify-content:space-between;min-height:180px;padding:25px;background:var(--ink);color:var(--paper);transition:grid-column .55s cubic-bezier(.2,.75,.25,1),transform .4s}
+.gallery-bento-note .eyebrow{color:#b4afa5;margin:0}
+.gallery-bento-note>p{font-size:clamp(24px,3vw,40px);line-height:1.02;letter-spacing:-.06em;margin:24px 0}
+.gallery-bento-note>p em{font-family:var(--serif);color:var(--orange)}
+.gallery-bento-note-bottom{display:flex;justify-content:space-between;gap:10px;font:8px var(--mono);letter-spacing:.08em;color:#c3beb4}
+.gallery-bento-note-bottom span{color:var(--orange);font-size:15px}
+.shop-fluid-grid{grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-flow:dense;gap:26px 18px;align-items:stretch}
+.shop-fluid-grid .shop-bento-card{grid-column:span 3;min-width:0;opacity:0;transform:translateY(25px) scale(.985);animation:b24-card-arrive .75s cubic-bezier(.2,.75,.25,1) forwards;transition:grid-column .55s cubic-bezier(.2,.75,.25,1),transform .5s cubic-bezier(.2,.75,.25,1),filter .4s}
+.shop-fluid-grid .shop-bento-card-1{grid-column:span 6;animation-delay:.08s}
+.shop-fluid-grid .shop-bento-card-2{grid-column:span 3;animation-delay:.16s}
+.shop-fluid-grid .shop-bento-card-3{grid-column:span 3;animation-delay:.24s}
+.shop-fluid-grid .shop-bento-card-4{grid-column:span 4;animation-delay:.32s}
+.shop-fluid-grid .shop-bento-card-5{grid-column:span 4;animation-delay:.4s}
+.shop-fluid-grid .shop-bento-card-6{grid-column:span 4;animation-delay:.48s}
+.shop-fluid-grid:has(.shop-bento-card:hover) .shop-bento-card:not(:hover){grid-column:span 2;filter:saturate(.75)}
+.shop-fluid-grid .shop-bento-card:hover,.shop-fluid-grid .shop-bento-card:focus-within{grid-column:span 5;transform:translateY(-5px);z-index:2}
+.shop-fluid-grid .product-image{aspect-ratio:4/5;background:#e8e3d8}
+.shop-fluid-grid .product-image img{transition:transform .8s cubic-bezier(.2,.75,.25,1),filter .5s}
+.shop-fluid-grid .shop-bento-card:hover .product-image img,.shop-fluid-grid .shop-bento-card:focus-within .product-image img{transform:scale(1.075);filter:saturate(1.08)}
+.shop-fluid-grid .product-meta{transition:padding .35s,border-color .35s}
+.shop-fluid-grid .shop-bento-card:hover .product-meta{padding-left:5px;padding-right:5px;border-color:var(--orange)}
+@keyframes b24-card-arrive{to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:850px){
+ .hero-cinematic{min-height:0;padding-top:62px;padding-bottom:92px}.hero-cinematic h1{font-size:clamp(72px,10vw,100px)}.hero-art-stage .artwork-placeholder{min-height:380px}
+ .gallery-bento-grid{gap:15px}.gallery-bento-card-1{grid-column:span 7}.gallery-bento-card-2,.gallery-bento-card-3{grid-column:span 5}.gallery-bento-card-4{grid-column:span 6}.gallery-bento-note{grid-column:span 6}
+ .gallery-bento-grid:has(.gallery-bento-card:hover) .gallery-bento-card:not(:hover){grid-column:span 3}.gallery-bento-grid .gallery-bento-card:hover,.gallery-bento-grid .gallery-bento-card:focus-within{grid-column:span 7}
+ .shop-fluid-grid{gap:22px 12px}.shop-fluid-grid .shop-bento-card-1{grid-column:span 7}.shop-fluid-grid .shop-bento-card-2,.shop-fluid-grid .shop-bento-card-3{grid-column:span 5}.shop-fluid-grid .shop-bento-card-4,.shop-fluid-grid .shop-bento-card-5,.shop-fluid-grid .shop-bento-card-6{grid-column:span 4}
+ .shop-fluid-grid:has(.shop-bento-card:hover) .shop-bento-card:not(:hover){grid-column:span 3}.shop-fluid-grid .shop-bento-card:hover,.shop-fluid-grid .shop-bento-card:focus-within{grid-column:span 7}
+}
+@media(max-width:600px){
+ .hero-cinematic{padding-top:48px;padding-bottom:75px;gap:35px}.hero-cinematic h1{font-size:clamp(68px,16vw,94px);margin-bottom:25px}.hero-cinematic .hero-title-line{margin-bottom:-.06em}.hero-art-stage .artwork-placeholder{min-height:340px}.hero-art-orbit{width:60px;height:60px;right:-12px;top:-15px;font-size:20px}.hero-index{left:7%;bottom:23px;font-size:8px}.hero-signature{font-size:7px}
+ .gallery-bento-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 13px}.gallery-bento-card-1,.gallery-bento-card-2,.gallery-bento-card-3,.gallery-bento-card-4{grid-column:span 1}.gallery-bento-card-1{grid-column:1/-1}.gallery-bento-card-1 .gallery-bento-image{aspect-ratio:5/4}.gallery-bento-note{grid-column:1/-1;min-height:190px}.gallery-bento-grid:has(.gallery-bento-card:hover) .gallery-bento-card:not(:hover){grid-column:span 1;filter:none}.gallery-bento-grid .gallery-bento-card:hover,.gallery-bento-grid .gallery-bento-card:focus-within{grid-column:span 1;transform:translateY(-3px)}.gallery-bento-grid .gallery-bento-card-1:hover,.gallery-bento-grid .gallery-bento-card-1:focus-within{grid-column:1/-1}
+ .shop-fluid-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 13px}.shop-fluid-grid .shop-bento-card-1,.shop-fluid-grid .shop-bento-card-2,.shop-fluid-grid .shop-bento-card-3,.shop-fluid-grid .shop-bento-card-4,.shop-fluid-grid .shop-bento-card-5,.shop-fluid-grid .shop-bento-card-6{grid-column:span 1}.shop-fluid-grid .shop-bento-card-1{grid-column:1/-1}.shop-fluid-grid .shop-bento-card-1 .product-image{aspect-ratio:5/4}.shop-fluid-grid:has(.shop-bento-card:hover) .shop-bento-card:not(:hover){grid-column:span 1;filter:none}.shop-fluid-grid .shop-bento-card:hover,.shop-fluid-grid .shop-bento-card:focus-within{grid-column:span 1;transform:translateY(-3px)}.shop-fluid-grid .shop-bento-card-1:hover,.shop-fluid-grid .shop-bento-card-1:focus-within{grid-column:1/-1}
+}
+@media(prefers-reduced-motion:reduce){
+ .hero-cinematic .hero-title-line>span,.hero-kicker,.hero-kicker-line,.hero-description,.hero-actions,.hero-signature,.hero-art-stage,.hero-art-stage:before,.hero-art-glow,.hero-art-orbit,.hero-art-stage .artwork-placeholder,.hero-art-stage .art-label,.hero-index,.gallery-bento-card,.shop-fluid-grid .shop-bento-card{animation:none!important;opacity:1!important;transform:none!important;clip-path:none!important}
+ .gallery-bento-grid:has(.gallery-bento-card:hover) .gallery-bento-card:not(:hover),.shop-fluid-grid:has(.shop-bento-card:hover) .shop-bento-card:not(:hover){grid-column:initial;filter:none}
+ .gallery-bento-grid .gallery-bento-card:hover,.gallery-bento-grid .gallery-bento-card:focus-within,.shop-fluid-grid .shop-bento-card:hover,.shop-fluid-grid .shop-bento-card:focus-within{transform:none}
+}
