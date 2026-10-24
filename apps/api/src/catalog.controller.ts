@@ -183,7 +183,16 @@ export class CatalogController {
     }
     if (body.description !== undefined) data.description = body.description ? String(body.description) : null;
     if (body.imageUrl !== undefined) data.imageUrl = body.imageUrl ? String(body.imageUrl).slice(0, 2048) : null;
-    return this.prisma.artwork.update({ where: { id }, data, include: { variants: true, artist: true } });
+    const updated = await this.prisma.artwork.update({ where: { id }, data, include: { variants: true, artist: true } });
+    // Publishing one member of a group publishes the entire curated painting/edition group.
+    // Every member receives the selected artist and featured state so all options are available together.
+    if (body.published === true && updated.groupKey) {
+      await this.prisma.artwork.updateMany({
+        where: { groupKey: updated.groupKey, id: { not: updated.id } },
+        data: { status: "PUBLISHED", artistId: updated.artistId, featured: updated.featured },
+      });
+    }
+    return updated;
   }
 
   @Post("admin/artworks/:id/publish")
