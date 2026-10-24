@@ -7,6 +7,22 @@ import { requireAdminToken } from "./admin-auth";
 export class CatalogController {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Collapse separately imported Printify products into one public artwork when they share a group key. */
+  private collapseGroups<T extends { id: string; groupKey?: string | null; artistId?: string | null; featured?: boolean; variants: any[] }>(rows: T[]): T[] {
+    const groups = new Map<string, T>();
+    for (const row of rows) {
+      const key = row.groupKey ? `${row.artistId || "no-artist"}:${row.groupKey}` : `artwork:${row.id}`;
+      const current = groups.get(key);
+      if (!current) {
+        groups.set(key, { ...row, variants: [...row.variants] });
+        continue;
+      }
+      current.variants = [...current.variants, ...row.variants].filter((variant, index, all) => all.findIndex((item) => item.id === variant.id) === index);
+      if (row.featured) current.featured = true;
+    }
+    return [...groups.values()].map((row) => ({ ...row, variants: [...row.variants].sort((a, b) => Number(a.priceCents) - Number(b.priceCents)) }));
+  }
+
   private publicArtworkInclude(): Prisma.ArtworkInclude {
     return {
       artist: { select: { id: true, name: true, slug: true, bio: true, imageUrl: true } },
@@ -16,11 +32,12 @@ export class CatalogController {
 
   @Get("artworks/featured")
   async featured() {
-    return this.prisma.artwork.findMany({
-      where: { status: "PUBLISHED", featured: true },
+    const rows = await this.prisma.artwork.findMany({
+      where: { status: "PUBLISHED" },
       include: this.publicArtworkInclude(),
-      orderBy: { updatedAt: "desc" },
+      orderBy: [{ featured: "desc" }, { updatedAt: "desc" }],
     });
+    return this.collapseGroups(rows).filter((artwork) => artwork.featured);
   }
 
   @Get("artworks")
@@ -30,33 +47,34 @@ export class CatalogController {
     @Query("q") search?: string,
     @Query("limit") limitValue?: string,
   ) {
-    const where: any = { status: "PUBLISHED" };
-    if (artist?.trim()) where.artist = { is: { slug: artist.trim() } };
-    if (featured === "true") where.featured = true;
-    if (featured === "false") where.featured = false;
+    const rows = await this.prisma.artwork.findMany({
+      where: { status: "PUBLISHED" },
+      include: this.publicArtworkInclude(),
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    });
+    let artworks = this.collapseGroups(rows);
+    if (artist?.trim()) artworks = artworks.filter((artwork: any) => artwork.artist?.slug === artist.trim());
+    if (featured === "true") artworks = artworks.filter((artwork) => artwork.featured);
+    if (featured === "false") artworks = artworks.filter((artwork) => !artwork.featured);
     if (search?.trim()) {
-      const term = search.trim().slice(0, 100);
-      where.OR = [{ title: { contains: term } }, { description: { contains: term } }];
+      const term = search.trim().slice(0, 100).toLocaleLowerCase();
+      artworks = artworks.filter((artwork: any) => `${artwork.title} ${artwork.description || ""}`.toLocaleLowerCase().includes(term));
     }
     const limit = Number(limitValue);
     const take = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 100) : undefined;
-    return this.prisma.artwork.findMany({
-      where,
-      include: this.publicArtworkInclude(),
-      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-      ...(take ? { take } : {}),
-    });
+    return take ? artworks.slice(0, take) : artworks;
   }
 
   @Get("artists/:slug/artworks")
   async byArtist(@Param("slug") slug: string) {
     const artist = await this.prisma.artist.findUnique({ where: { slug } });
     if (!artist) throw new NotFoundException("Artist not found");
-    return this.prisma.artwork.findMany({
+    const rows = await this.prisma.artwork.findMany({
       where: { artistId: artist.id, status: "PUBLISHED" },
       include: this.publicArtworkInclude(),
       orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     });
+    return this.collapseGroups(rows);
   }
 
   @Get("artworks/:slug")
@@ -66,7 +84,13 @@ export class CatalogController {
       include: this.publicArtworkInclude(),
     });
     if (!artwork) throw new NotFoundException("Artwork not found");
-    return artwork;
+    if (!artwork.groupKey) return artwork;
+    const rows = await this.prisma.artwork.findMany({
+      where: { groupKey: artwork.groupKey, artistId: artwork.artistId, status: "PUBLISHED" },
+      include: this.publicArtworkInclude(),
+      orderBy: [{ featured: "desc" }, { createdAt: "asc" }],
+    });
+    return this.collapseGroups(rows)[0] || artwork;
   }
 
   @Get("admin/artworks")
@@ -128,6 +152,15 @@ export class CatalogController {
         const artist = await this.prisma.artist.findUnique({ where: { id: String(body.artistId) } });
         if (!artist) throw new BadRequestException("Choose a valid artist.");
         data.artistId = artist.id;
+      }
+    }
+    if (body.groupKey !== undefined) {
+      const rawGroupKey = String(body.groupKey ?? "").trim().toLowerCase();
+      if (!rawGroupKey) data.groupKey = null;
+      else {
+        const groupKey = rawGroupKey.normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 191);
+        if (!groupKey) throw new BadRequestException("Enter a valid group name using letters or numbers.");
+        data.groupKey = groupKey;
       }
     }
     if (typeof body.featured === "boolean") data.featured = body.featured;
