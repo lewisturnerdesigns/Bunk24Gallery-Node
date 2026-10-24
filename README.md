@@ -26,7 +26,7 @@ Public catalogue endpoints:
 
 - `GET /api/artworks` — all published artwork; optional `artist=<artist-slug>`, `featured=true|false`, `q=<search>`, and `limit=<1..100>` filters.
 - `GET /api/artworks/featured` — published featured artwork.
-- `GET /api/artworks/:slug` — one published artwork with active variants and artist information.
+- `GET /api/artworks/:slug` — one published artwork with active variants and artist information. Published records sharing a group key are collapsed into one listing with combined variants; variants from differently titled source products include the source title so customers can tell formats apart.
 - `GET /api/artists` — artists with published artwork.
 - `GET /api/artists/:slug` — one artist profile and published-work count.
 - `GET /api/artists/:slug/artworks` — published artwork for one artist.
@@ -34,7 +34,7 @@ Public catalogue endpoints:
 Admin endpoints (Bearer admin session required):
 
 - `GET /api/admin/artists` and `POST /api/admin/artists` — list/create artists.
-- `PATCH /api/admin/artworks/:id` — assign/clear artist, toggle featured, update metadata, or publish/unpublish.
+- `PATCH /api/admin/artworks/:id` — assign/clear artist, toggle featured, update metadata, set/clear `groupKey`, or publish/unpublish. Publishing a grouped artwork publishes its grouped source products together.
 - `GET /api/admin/artworks` — all artwork with variants and artist assignment.
 
 ## Printify
