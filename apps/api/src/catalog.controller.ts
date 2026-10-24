@@ -187,12 +187,14 @@ export class CatalogController {
     if (body.description !== undefined) data.description = body.description ? String(body.description) : null;
     if (body.imageUrl !== undefined) data.imageUrl = body.imageUrl ? String(body.imageUrl).slice(0, 2048) : null;
     const updated = await this.prisma.artwork.update({ where: { id }, data, include: { variants: true, artist: true } });
-    // Publishing one member of a group publishes the entire curated painting/edition group.
-    // Every member receives the selected artist and featured state so all options are available together.
-    if (body.published === true && updated.groupKey) {
+    // Publishing/unpublishing one member changes the entire curated painting/edition group.
+    // Published members share the selected artist and featured state so all options stay together.
+    if (typeof body.published === "boolean" && updated.groupKey) {
       await this.prisma.artwork.updateMany({
         where: { groupKey: updated.groupKey, id: { not: updated.id } },
-        data: { status: "PUBLISHED", artistId: updated.artistId, featured: updated.featured },
+        data: body.published
+          ? { status: "PUBLISHED", artistId: updated.artistId, featured: updated.featured }
+          : { status: "DRAFT" },
       });
     }
     return updated;
