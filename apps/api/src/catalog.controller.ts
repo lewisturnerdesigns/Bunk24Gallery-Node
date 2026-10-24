@@ -17,7 +17,10 @@ export class CatalogController {
         groups.set(key, { ...row, variants: [...row.variants] });
         continue;
       }
-      current.variants = [...current.variants, ...row.variants].filter((variant, index, all) => all.findIndex((item) => item.id === variant.id) === index);
+      const incoming = row.title !== current.title
+        ? row.variants.map((variant) => ({ ...variant, name: `${row.title} · ${variant.name}` }))
+        : row.variants;
+      current.variants = [...current.variants, ...incoming].filter((variant, index, all) => all.findIndex((item) => item.id === variant.id) === index);
       if (row.featured) current.featured = true;
     }
     return [...groups.values()].map((row) => ({ ...row, variants: [...row.variants].sort((a, b) => Number(a.priceCents) - Number(b.priceCents)) }));
@@ -158,7 +161,7 @@ export class CatalogController {
       const rawGroupKey = String(body.groupKey ?? "").trim().toLowerCase();
       if (!rawGroupKey) data.groupKey = null;
       else {
-        const groupKey = rawGroupKey.normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 191);
+        const groupKey = rawGroupKey.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 191);
         if (!groupKey) throw new BadRequestException("Enter a valid group name using letters or numbers.");
         data.groupKey = groupKey;
       }
