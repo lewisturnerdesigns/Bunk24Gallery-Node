@@ -6,7 +6,7 @@ const API = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").rep
 
 type Artist = { id: string; name: string; slug: string; bio?: string | null; imageUrl?: string | null; _count?: { artworks: number } };
 type Artwork = {
-  id: string; title: string; slug: string; status: string; featured: boolean; artistId?: string | null;
+  id: string; title: string; slug: string; status: string; featured: boolean; groupKey?: string | null; artistId?: string | null;
   artist?: Artist | null; imageUrl?: string | null; printifyProductId?: string | null;
   variants: { id: string; name: string; priceCents: number; printifyVariantId?: string | null; active: boolean }[];
 };
@@ -56,6 +56,7 @@ export default function PrintifyManager({ token }: { token: string }) {
   const [search, setSearch] = useState("");
   const [selectedArtists, setSelectedArtists] = useState<Record<string, string>>({});
   const [featuredChoices, setFeaturedChoices] = useState<Record<string, boolean>>({});
+  const [groupChoices, setGroupChoices] = useState<Record<string, string>>({});
   const [artistName, setArtistName] = useState("");
   const [artistSlug, setArtistSlug] = useState("");
   const [showArtistForm, setShowArtistForm] = useState(false);
@@ -164,6 +165,25 @@ export default function PrintifyManager({ token }: { token: string }) {
       setMessage(publish ? `“${artwork.title}” is now published in the BUNK24 gallery.` : `Artist assignment saved for “${artwork.title}”.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not update this artwork.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveGroup(artwork: Artwork) {
+    const groupKey = (groupChoices[artwork.id] ?? artwork.groupKey ?? "").trim();
+    setError(""); setMessage(""); setBusy(true);
+    try {
+      await request(`/admin/artworks/${encodeURIComponent(artwork.id)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ groupKey }),
+      });
+      await refreshAdminData();
+      setMessage(groupKey
+        ? `Saved group “${groupKey}”. Imported products using the same group name will appear as one artwork with combined print options.`
+        : `Removed “${artwork.title}” from its product group.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save this product group.");
     } finally {
       setBusy(false);
     }
@@ -291,6 +311,13 @@ export default function PrintifyManager({ token }: { token: string }) {
                     <option value="">Choose an artist…</option>{artists.map((artist) => <option value={artist.id} key={artist.id}>{artist.name}</option>)}
                   </select>
                 </label>
+                <div className="printify-group-editor">
+                  <label className="printify-field">Product group <span className="muted small-copy">Optional · use the same name for every format of one painting</span>
+                    <input value={groupChoices[artwork.id] ?? artwork.groupKey ?? ""} onChange={(event) => setGroupChoices((current) => ({ ...current, [artwork.id]: event.target.value }))} placeholder="e.g. red-bird-study" maxLength={191} />
+                  </label>
+                  <button className="button secondary" disabled={busy} onClick={() => void saveGroup(artwork)}>Save group</button>
+                  <p className="muted small-copy">Group related imported products (for example, canvas and poster editions) under one shared name. Published members become one shop listing with all active options.</p>
+                </div>
                 <label className="printify-feature-check"><input type="checkbox" checked={isFeatured} onChange={(event) => setFeaturedChoices((current) => ({ ...current, [artwork.id]: event.target.checked }))} /> Feature this artwork in the gallery</label>
                 <div className="printify-card-actions">
                   <button className="button secondary" disabled={busy} onClick={() => void saveArtist(artwork, false)}>Save assignment</button>
