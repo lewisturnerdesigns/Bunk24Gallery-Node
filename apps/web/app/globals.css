@@ -1041,3 +1041,52 @@ body.public-route-changing .route-frame-public {
   .hero-art-stage .hero-featured-art,
   .hero-art-mark { animation: none !important; }
 }
+
+
+/* BUNK24 portfolio interaction pass: explicit hit areas, responsive hover states and keyboard parity. */
+.product-card,.gallery-bento-card{min-width:0;position:relative}
+.product-image,.gallery-bento-image{display:block;position:relative;overflow:hidden;isolation:isolate;background:#ded8cc;cursor:pointer;transform:translateZ(0)}
+.product-image{aspect-ratio:4/5}
+.product-image img,.gallery-bento-image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform 900ms cubic-bezier(.2,.7,.15,1),filter 650ms ease;will-change:transform}
+.product-image img{position:absolute;inset:0}
+.product-image>span{display:flex;min-height:100%;align-items:center;justify-content:center;padding:24px;font:11px var(--mono);letter-spacing:.12em}
+.product-image:after,.gallery-bento-image:after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(180deg,rgba(20,19,17,0) 38%,rgba(20,19,17,.52) 100%);transition:opacity 450ms ease}
+.product-card:hover .product-image img,.product-card:focus-within .product-image img,.gallery-bento-card:hover .gallery-bento-image img,.gallery-bento-card:focus-within .gallery-bento-image img{transform:scale(1.055);filter:saturate(1.08) contrast(1.015)}
+.product-card:hover .product-image:after,.product-card:focus-within .product-image:after,.gallery-bento-card:hover .gallery-bento-image:after,.gallery-bento-card:focus-within .gallery-bento-image:after{opacity:1}
+.product-card .product-meta,.gallery-bento-card .product-meta{transition:transform 450ms cubic-bezier(.2,.7,.15,1),border-color 350ms ease}
+.product-card:hover .product-meta,.product-card:focus-within .product-meta,.gallery-bento-card:hover .product-meta,.gallery-bento-card:focus-within .product-meta{transform:translateY(-3px);border-color:var(--orange)}
+.product-meta h2 a,.product-meta h3 a{transition:color 250ms ease}
+.product-card:hover .product-meta h2 a,.product-card:focus-within .product-meta h2 a,.gallery-bento-card:hover .product-meta h2 a,.gallery-bento-card:focus-within .product-meta h2 a{color:var(--orange)}
+.gallery-bento-image{aspect-ratio:4/5}
+.gallery-bento-image img{position:absolute;inset:0}
+.gallery-bento-index{position:absolute;z-index:2;left:16px;bottom:15px;color:#fff;font:9px var(--mono);letter-spacing:.12em;opacity:.0;transform:translateY(8px);transition:opacity 350ms ease,transform 450ms cubic-bezier(.2,.7,.15,1)}
+.gallery-bento-card:hover .gallery-bento-index,.gallery-bento-card:focus-within .gallery-bento-index{opacity:1;transform:translateY(0)}
+.gallery-bento-card,.shop-bento-card{animation:portfolio-card-in 850ms cubic-bezier(.2,.7,.15,1) both}
+.gallery-bento-card:nth-child(2),.shop-bento-card:nth-child(2){animation-delay:90ms}
+.gallery-bento-card:nth-child(3),.shop-bento-card:nth-child(3){animation-delay:160ms}
+.gallery-bento-card:nth-child(4),.shop-bento-card:nth-child(4){animation-delay:230ms}
+.gallery-bento-card:nth-child(5),.shop-bento-card:nth-child(5){animation-delay:300ms}
+.gallery-bento-image:focus-visible,.product-image:focus-visible,.product-meta a:focus-visible{outline:2px solid var(--orange);outline-offset:4px}
+.hero-featured-art{display:block;width:100%;height:100%;object-fit:cover;position:relative;z-index:1;transform:scale(1.001);animation:hero-art-arrive 1400ms cubic-bezier(.2,.7,.15,1) both}
+.hero-art-stage{isolation:isolate}
+.hero-art-stage:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(125deg,rgba(255,255,255,.12),transparent 36%,rgba(20,19,17,.12));mix-blend-mode:soft-light;z-index:2}
+.hero-art-stage:hover .hero-featured-art{transform:scale(1.025);filter:saturate(1.08);transition:transform 1200ms cubic-bezier(.2,.7,.15,1),filter 800ms ease}
+.hero-art-mark{transition:transform 550ms cubic-bezier(.2,.7,.15,1),background 350ms ease}
+.hero-art-stage:hover .hero-art-mark{transform:translate(4px,-4px);background:var(--ink)}
+.shop-portfolio-hero{position:relative;overflow:hidden}
+.shop-portfolio-title-row h1 span{display:block}
+.shop-portfolio-title-row h1 .shop-title-serif{animation:portfolio-title-in 950ms cubic-bezier(.2,.7,.15,1) both}
+.shop-portfolio-title-row h1 .shop-title-sans{animation:portfolio-title-in 1050ms 100ms cubic-bezier(.2,.7,.15,1) both}
+.shop-portfolio-intro-copy{animation:portfolio-copy-in 900ms 250ms cubic-bezier(.2,.7,.15,1) both}
+@keyframes portfolio-card-in{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes hero-art-arrive{from{opacity:0;transform:scale(1.045)}to{opacity:1;transform:scale(1)}}
+@keyframes portfolio-title-in{from{opacity:0;transform:translateY(34px);clip-path:inset(0 0 100% 0)}to{opacity:1;transform:translateY(0);clip-path:inset(0 0 0 0)}}
+@keyframes portfolio-copy-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.printify-group-editor{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px;margin:18px 0;padding:15px;border:1px solid var(--line);background:rgba(255,255,255,.28)}
+.printify-group-editor .printify-field{margin:0}
+.printify-group-editor .printify-field input{width:100%;margin-top:8px;min-height:42px;padding:10px 12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:12px var(--sans);outline-offset:3px}
+.printify-group-editor .printify-field input:focus{border-color:var(--orange);outline:1px solid var(--orange)}
+.printify-group-editor>p{grid-column:1/-1;margin:0;line-height:1.6}
+@media(hover:none){.gallery-bento-index{opacity:1;transform:none}.product-card:hover .product-meta,.gallery-bento-card:hover .product-meta{transform:none}}
+@media(max-width:600px){.printify-group-editor{grid-template-columns:1fr}.printify-group-editor .button{width:100%;justify-content:center}.gallery-bento-index{left:11px;bottom:11px}}
+@media(prefers-reduced-motion:reduce){.product-image img,.gallery-bento-image img,.product-card .product-meta,.gallery-bento-card .product-meta,.gallery-bento-index,.hero-featured-art,.hero-art-mark,.shop-portfolio-title-row h1 .shop-title-serif,.shop-portfolio-title-row h1 .shop-title-sans,.shop-portfolio-intro-copy{animation:none!important;transition:none!important;transform:none!important;filter:none!important}.gallery-bento-card,.shop-bento-card{animation:none!important}}
