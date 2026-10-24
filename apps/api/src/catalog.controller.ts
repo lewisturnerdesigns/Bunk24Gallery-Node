@@ -8,7 +8,7 @@ export class CatalogController {
   constructor(private readonly prisma: PrismaService) {}
 
   /** Collapse separately imported Printify products into one public artwork when they share a group key. */
-  private collapseGroups<T extends { id: string; groupKey?: string | null; artistId?: string | null; featured?: boolean; variants: any[] }>(rows: T[]): T[] {
+  private collapseGroups<T extends { id: string; title: string; groupKey?: string | null; artistId?: string | null; featured?: boolean; variants: any[] }>(rows: T[]): T[] {
     const groups = new Map<string, T>();
     for (const row of rows) {
       const key = row.groupKey ? `${row.artistId || "no-artist"}:${row.groupKey}` : `artwork:${row.id}`;
