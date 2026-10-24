@@ -39,6 +39,7 @@ model Artwork {
   imageUrl         String?       @db.VarChar(2048)
   featured         Boolean       @default(false)
   printifyProductId String?      @unique
+  groupKey          String?       @db.VarChar(191)
   artistId          String?
   artist            Artist?       @relation(fields: [artistId], references: [id], onDelete: SetNull)
   variants         PrintVariant[]
@@ -47,6 +48,7 @@ model Artwork {
 
   @@index([status, featured])
   @@index([artistId, status])
+  @@index([groupKey])
 }
 
 model Artist {
