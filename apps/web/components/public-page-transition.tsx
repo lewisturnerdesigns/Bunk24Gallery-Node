@@ -73,5 +73,5 @@ export default function PublicPageTransition({ children }: { children: ReactNode
     }
   }, [isAdmin, pathname, router]);
 
-  return <div className={isAdmin ? "route-frame route-frame-admin" : "route-frame route-frame-public"} onClickCapture={onClickCapture} key={pathname}>{children}</div>;
+  return <div className={isAdmin ? "route-frame route-frame-admin" : "route-frame route-frame-public"} onClickCapture={onClickCapture}>{children}</div>;
 }
