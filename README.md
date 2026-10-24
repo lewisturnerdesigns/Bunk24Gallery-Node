@@ -10,6 +10,7 @@ BUNK24 Gallery is a multi-page Next.js storefront with a NestJS API and MySQL/Pr
 4. Run `npm run db:generate`.
 5. Run `npm run db:migrate`; when Prisma asks for a new migration name, use `artist_catalog_management`.
    - If Prisma proposes resetting an existing database, cancel. Do not reset a database containing artwork or orders; resolve the migration history first.
+   - If your existing local database already has the `artist_catalog_management` migration, create the new schema migration as `artwork_grouping`. If this is a fresh setup, the first migration can still be named `artist_catalog_management`.
 6. Run `npm run db:seed`.
 7. Run `npm run dev`.
 
