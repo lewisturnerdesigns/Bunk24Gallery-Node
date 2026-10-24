@@ -38,7 +38,7 @@ export class CatalogController {
     const rows = await this.prisma.artwork.findMany({
       where: { status: "PUBLISHED" },
       include: this.publicArtworkInclude(),
-      orderBy: [{ featured: "desc" }, { updatedAt: "desc" }],
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     });
     return this.collapseGroups(rows).filter((artwork) => artwork.featured);
   }
@@ -91,7 +91,7 @@ export class CatalogController {
     const rows = await this.prisma.artwork.findMany({
       where: { groupKey: artwork.groupKey, artistId: artwork.artistId, status: "PUBLISHED" },
       include: this.publicArtworkInclude(),
-      orderBy: [{ featured: "desc" }, { createdAt: "asc" }],
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     });
     return this.collapseGroups(rows)[0] || artwork;
   }
