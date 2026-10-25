@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Artwork } from "../lib/api";
 import { money } from "../lib/api";
 
@@ -10,6 +10,7 @@ type Props = { artworks: Artwork[] };
 export default function PortfolioView({ artworks }: Props) {
   const [view, setView] = useState<"grid" | "3d">("grid");
   const [activeIndex, setActiveIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   const move = (step: number) => {
     setActiveIndex((current) => (current + step + artworks.length) % artworks.length);
@@ -54,6 +55,7 @@ export default function PortfolioView({ artworks }: Props) {
                   className={`portfolio-3d-card ${offset === 0 ? "is-active" : ""}`}
                   key={artwork.id}
                   aria-label={`View ${artwork.title}`}
+                  onClick={(event) => { if (offset !== 0) { event.preventDefault(); setActiveIndex(index); } }}
                   aria-hidden={!visible}
                   tabIndex={visible ? 0 : -1}
                   style={{
