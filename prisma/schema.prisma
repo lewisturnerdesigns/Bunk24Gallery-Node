@@ -39,11 +39,29 @@ model Artwork {
   imageUrl         String?       @db.VarChar(2048)
   featured         Boolean       @default(false)
   printifyProductId String?      @unique
+  groupKey          String?       @db.VarChar(191)
+  artistId          String?
+  artist            Artist?       @relation(fields: [artistId], references: [id], onDelete: SetNull)
   variants         PrintVariant[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
   @@index([status, featured])
+  @@index([artistId, status])
+  @@index([groupKey])
+}
+
+model Artist {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  bio       String?   @db.Text
+  imageUrl  String?   @db.VarChar(2048)
+  artworks  Artwork[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([name])
 }
 
 model PrintVariant {

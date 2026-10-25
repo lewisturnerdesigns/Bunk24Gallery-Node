@@ -8,7 +8,9 @@ BUNK24 Gallery is a multi-page Next.js storefront with a NestJS API and MySQL/Pr
 2. Set a long random `ADMIN_API_KEY`. Keep it private and never prefix it with `NEXT_PUBLIC_`.
 3. Run `npm install`.
 4. Run `npm run db:generate`.
-5. Run `npm run db:migrate` and name the migration `printify_order_fields` when prompted.
+5. Run `npm run db:migrate`; when Prisma asks for a new migration name, use `artist_catalog_management`.
+   - If Prisma proposes resetting an existing database, cancel. Do not reset a database containing artwork or orders; resolve the migration history first.
+   - If your existing local database already has the `artist_catalog_management` migration, create the new schema migration as `artwork_grouping`. If this is a fresh setup, the first migration can still be named `artist_catalog_management`.
 6. Run `npm run db:seed`.
 7. Run `npm run dev`.
 
@@ -16,6 +18,25 @@ BUNK24 Gallery is a multi-page Next.js storefront with a NestJS API and MySQL/Pr
 - API health: http://localhost:8000/api/health
 - Public catalogue API: http://localhost:8000/api/artworks
 - Printify connection status: http://localhost:8000/api/printify/status
+
+## Artist and catalogue management
+
+The Printify admin page is a read-only provider catalogue with product search, imported/published filters, readable mockups and metadata, variant-level provider costs and availability, and a complete raw-response viewer. Importing creates a BUNK24 draft. Select an artist and use **Assign & publish** to publish the BUNK24 website listing; this does not publish anything to Printify.
+
+Public catalogue endpoints:
+
+- `GET /api/artworks` — all published artwork; optional `artist=<artist-slug>`, `featured=true|false`, `q=<search>`, and `limit=<1..100>` filters.
+- `GET /api/artworks/featured` — published featured artwork.
+- `GET /api/artworks/:slug` — one published artwork with active variants and artist information. Published records sharing a group key are collapsed into one listing with combined variants; variants from differently titled source products include the source title so customers can tell formats apart.
+- `GET /api/artists` — artists with published artwork.
+- `GET /api/artists/:slug` — one artist profile and published-work count.
+- `GET /api/artists/:slug/artworks` — published artwork for one artist.
+
+Admin endpoints (Bearer admin session required):
+
+- `GET /api/admin/artists` and `POST /api/admin/artists` — list/create artists.
+- `PATCH /api/admin/artworks/:id` — assign/clear artist, toggle featured, update metadata, set/clear `groupKey`, or publish/unpublish. Publishing a grouped artwork publishes its grouped source products together.
+- `GET /api/admin/artworks` — all artwork with variants and artist assignment.
 
 ## Printify
 

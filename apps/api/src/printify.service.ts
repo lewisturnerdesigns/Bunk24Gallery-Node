@@ -1,4 +1,6 @@
-import { Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
+
+type PrintifyProduct = { id?: string | number; [key: string]: any };
 
 @Injectable()
 export class PrintifyService {
@@ -6,14 +8,18 @@ export class PrintifyService {
   private get shopId() { return process.env.PRINTIFY_SHOP_ID?.trim(); }
 
   status() {
+    const configured = Boolean(this.token && this.shopId);
     return {
-      configured: Boolean(this.token && this.shopId),
+      configured,
       shopConfigured: Boolean(this.shopId),
       tokenConfigured: Boolean(this.token),
-      syncEnabled: Boolean(this.token && this.shopId),
-      note: this.token && this.shopId
-        ? "Credentials are present. Verify the connected shop before enabling live order submission."
-        : "Add PRINTIFY_API_TOKEN and PRINTIFY_SHOP_ID to the root .env file to connect Printify.",
+      catalogImportEnabled: configured,
+      // Deliberately hard-disabled. This integration does not submit orders to Printify.
+      syncEnabled: false,
+      orderSubmissionEnabled: false,
+      note: configured
+        ? "Read-only catalog access is configured. Imports create BUNK24 drafts only; Printify order submission is disabled."
+        : "Add PRINTIFY_API_TOKEN and PRINTIFY_SHOP_ID to the root .env file to enable read-only catalog access. Order submission remains disabled.",
     };
   }
 
@@ -29,11 +35,44 @@ export class PrintifyService {
 
   async products() {
     if (!this.token || !this.shopId) throw new ServiceUnavailableException("Configure PRINTIFY_API_TOKEN and PRINTIFY_SHOP_ID first.");
-    const response = await fetch(`https://api.printify.com/v1/shops/${encodeURIComponent(this.shopId)}/products.json`, {
-      headers: { Authorization: `Bearer ${this.token}`, "User-Agent": "BUNK24-Gallery/1.0" },
-      cache: "no-store",
-    });
-    if (!response.ok) throw new ServiceUnavailableException(`Printify products request failed with status ${response.status}`);
+    const allProducts: PrintifyProduct[] = [];
+    let page = 1;
+    let lastPage = 1;
+
+    // Printify paginates product catalogues. Read every page, but cap requests defensively.
+    do {
+      const url = `https://api.printify.com/v1/shops/${encodeURIComponent(this.shopId)}/products.json?page=${page}&limit=50`;
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${this.token}`, "User-Agent": "BUNK24-Gallery/1.0" },
+        cache: "no-store",
+      });
+      if (!response.ok) throw new ServiceUnavailableException(`Printify products request failed with status ${response.status} on page ${page}`);
+      const payload: any = await response.json();
+      if (Array.isArray(payload)) {
+        allProducts.push(...payload);
+        break;
+      }
+      const rows = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload?.items) ? payload.items : [];
+      allProducts.push(...rows);
+      const reportedLastPage = Number(payload?.last_page ?? payload?.lastPage ?? page);
+      lastPage = Number.isInteger(reportedLastPage) && reportedLastPage >= page ? Math.min(reportedLastPage, 100) : page;
+      page += 1;
+    } while (page <= lastPage && page <= 100);
+
+    return allProducts;
+  }
+
+  async productById(productId: string): Promise<PrintifyProduct> {
+    if (!this.token || !this.shopId) throw new ServiceUnavailableException("Configure PRINTIFY_API_TOKEN and PRINTIFY_SHOP_ID first.");
+    const response = await fetch(
+      `https://api.printify.com/v1/shops/${encodeURIComponent(this.shopId)}/products/${encodeURIComponent(productId)}.json`,
+      {
+        headers: { Authorization: `Bearer ${this.token}`, "User-Agent": "BUNK24-Gallery/1.0" },
+        cache: "no-store",
+      },
+    );
+    if (response.status === 404) throw new NotFoundException("Printify product was not found in the configured shop.");
+    if (!response.ok) throw new ServiceUnavailableException(`Printify product request failed with status ${response.status}`);
     return response.json();
   }
 }
